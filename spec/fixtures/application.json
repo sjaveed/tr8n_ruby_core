@@ -1,0 +1,572 @@
+{
+  "key": "29adc3257b6960703",
+  "name": "Tr8n Client SDK Sample Application",
+  "description": "Automatically created from API call",
+  "definition": {
+    "default_data_tokens": {
+      "ndash": "&ndash;",
+      "mdash": "&mdash;",
+      "iexcl": "&iexcl;",
+      "iquest": "&iquest;",
+      "quot": "&quot;",
+      "ldquo": "&ldquo;",
+      "rdquo": "&rdquo;",
+      "lsquo": "&lsquo;",
+      "rsquo": "&rsquo;",
+      "laquo": "&laquo;",
+      "raquo": "&raquo;",
+      "nbsp": "&nbsp;",
+      "lsaquo": "&lsaquo;",
+      "rsaquo": "&rsaquo;",
+      "br": "<br\/>",
+      "lbrace": "{",
+      "rbrace": "}"
+    },
+    "default_decoration_tokens": {
+      "strong": "<strong>{$0}<\/strong>",
+      "bold": "<strong>{$0}<\/strong>",
+      "b": "<strong>{$0}<\/strong>",
+      "em": "<em>{$0}<\/em>",
+      "italic": "<i>{$0}<\/i>",
+      "i": "<i>{$0}<\/i>",
+      "link": "<a href='{$href}' target='_top'>{$0}<\/a>",
+      "br": "<br>{$0}",
+      "div": "<div id='{$id}' class='{$class}' style='{$style}'>{$0}<\/div>",
+      "span": "<span id='{$id}' class='{$class}' style='{$style}'>{$0}<\/span>",
+      "h1": "<h1>{$0}<\/h1>",
+      "h2": "<h2>{$0}<\/h2>",
+      "h3": "<h3>{$0}<\/h3>"
+    },
+    "enable_language_cases": true,
+    "enable_language_flags": true,
+    "rules": {
+      "number": {
+        "token_suffixes": [
+          "count",
+          "num",
+          "age",
+          "hours",
+          "minutes",
+          "years",
+          "seconds"
+        ],
+        "object_method": "to_i"
+      },
+      "gender": {
+        "token_suffixes": [
+          "user",
+          "profile",
+          "actor",
+          "target",
+          "partner"
+        ],
+        "object_method": "gender",
+        "method_values": {
+          "female": "female",
+          "male": "male",
+          "neutral": "neutral",
+          "unknown": "unknown"
+        }
+      },
+      "gender_list": {
+        "object_method": "size",
+        "token_suffixes": [
+          "list"
+        ]
+      },
+      "date": {
+        "token_suffixes": [
+          "date"
+        ],
+        "object_method": "to_date"
+      },
+      "value": {
+        "token_suffixes": "*",
+        "object_method": "to_s"
+      }
+    }
+  },
+  "languages": [
+    {
+      "locale": "ru",
+      "name": "Russian - \u0420\u0443\u0441\u0441\u043a\u0438\u0439",
+      "english_name": "Russian",
+      "native_name": "\u0420\u0443\u0441\u0441\u043a\u0438\u0439",
+      "right_to_left": false,
+      "enabled": true,
+      "google_key": "ru",
+      "facebook_key": "",
+      "myheritage_key": null,
+      "curse_words": null,
+      "context_rules": {
+        "date": {
+          "past": {
+            "operator": "is_in",
+            "value": "past"
+          },
+          "present": {
+            "operator": "is_in",
+            "value": "future"
+          },
+          "future": {
+            "operator": "is_in",
+            "value": "present"
+          }
+        },
+        "gender_list": {
+          "_empty_": {
+            "part1": "contains",
+            "value1": "at_least_two_elements",
+            "multipart": "false",
+            "part2": "are",
+            "value2": "all_male"
+          }
+        },
+        "gender": {
+          "male": {
+            "operator": "is",
+            "value": "male"
+          },
+          "female": {
+            "operator": "is",
+            "value": "female"
+          },
+          "unknown": {
+            "operator": "is",
+            "value": "unknown"
+          }
+        },
+        "number": {
+          "one": {
+            "part1": "ends_in",
+            "value1": "1",
+            "multipart": "true",
+            "operator": "and",
+            "part2": "does_not_end_in",
+            "value2": "11"
+          },
+          "few": {
+            "part1": "ends_in",
+            "value1": "2, 3, 4",
+            "multipart": "true",
+            "operator": "and",
+            "part2": "does_not_end_in",
+            "value2": "12, 13, 14"
+          },
+          "many": {
+            "part1": "ends_in",
+            "value1": "0, 5, 6, 7, 8, 9, 11, 12, 13, 14",
+            "multipart": "false",
+            "operator": "and",
+            "part2": "is",
+            "value2": ""
+          }
+        },
+        "value": {
+          "_empty_": {
+            "operator": "does_not_start_with",
+            "value": "\u0430, \u0438, \u043e, \u0443, \u044b, \u044d, \u0410, \u0418, \u041e, \u0423, \u042d"
+          }
+        }
+      },
+      "language_cases": [
+        {
+          "keyword": "acc",
+          "latin_name": "Accusativus",
+          "native_name": "\u0412\u0438\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
+          "description": "\u0412\u0438\u0436\u0443 - \u041a\u043e\u0433\u043e? \u0427\u0442\u043e?",
+          "application": "words",
+          "rules": [
+            
+          ]
+        },
+        {
+          "keyword": "dat",
+          "latin_name": "Dativus",
+          "native_name": "\u0414\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
+          "description": "\u0420\u0430\u0434 - \u041a\u043e\u043c\u0443? \u0427\u0435\u043c\u0443?",
+          "application": "words",
+          "rules": [
+            
+          ]
+        },
+        {
+          "keyword": "gen",
+          "latin_name": "Genitivus",
+          "native_name": "\u0420\u043e\u0434\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
+          "description": "\u041d\u0435\u0442 - \u041a\u043e\u0433\u043e? \u0427\u0435\u0433\u043e?",
+          "application": "words",
+          "rules": [
+            {
+              "multipart": false,
+              "gender": "male",
+              "part1": "ends_in",
+              "value1": "\u0431, \u0432, \u0433, \u0434, \u0436, \u0437, \u043a, \u043b, \u043c, \u043d, \u043f, \u0440, \u0441, \u0442, \u0444, \u0445, \u0446, \u0447, \u0448, \u0449",
+              "operation": "append",
+              "operation_value": "a"
+            },
+            {
+              "multipart": false,
+              "gender": "male",
+              "part1": "ends_in",
+              "value1": "\u0439",
+              "operation": "replace",
+              "operation_value": "\u044f"
+            },
+            {
+              "multipart": false,
+              "gender": "female",
+              "part1": "ends_in",
+              "value1": "\u0430",
+              "operation": "replace",
+              "operation_value": "\u044b"
+            },
+            {
+              "multipart": false,
+              "gender": "female",
+              "part1": "ends_in",
+              "value1": "\u044f",
+              "operation": "replace",
+              "operation_value": "\u0438"
+            }
+          ]
+        },
+        {
+          "keyword": "ins",
+          "latin_name": "Instrumentalis",
+          "native_name": "\u0422\u0432\u043e\u0440\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
+          "description": "\u0414\u043e\u0432\u043e\u043b\u0435\u043d - \u041a\u0435\u043c? \u0427\u0435\u043c?",
+          "application": "words",
+          "rules": [
+            
+          ]
+        },
+        {
+          "keyword": "nom",
+          "latin_name": "Nominativus",
+          "native_name": "\u0418\u043c\u0435\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
+          "description": "\u0415\u0441\u0442\u044c - \u041a\u0442\u043e? \u0427\u0442\u043e?",
+          "application": "words",
+          "rules": [
+            
+          ]
+        },
+        {
+          "keyword": "pos",
+          "latin_name": "Possessive",
+          "native_name": "\u041f\u0440\u0438\u0442\u044f\u0436\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
+          "description": "\u0427\u0435\u0439?",
+          "application": "words",
+          "rules": [
+            {
+              "multipart": false,
+              "gender": "female",
+              "part1": "ends_in",
+              "value1": "\u0432\u0430",
+              "operation": "replace",
+              "operation_value": "\u0432\u043e\u0439"
+            },
+            {
+              "multipart": false,
+              "gender": "male",
+              "part1": "ends_in",
+              "value1": "\u0431, \u0432, \u0433, \u0434, \u0436, \u0437, \u043a, \u043b, \u043c, \u043d, \u043f, \u0440, \u0441, \u0442, \u0444, \u0445, \u0446, \u0447, \u0448, \u0449",
+              "operation": "append",
+              "operation_value": "a"
+            }
+          ]
+        },
+        {
+          "keyword": "pre",
+          "latin_name": "Prepositivus",
+          "native_name": "\u041f\u0440\u0435\u0434\u043b\u043e\u0436\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
+          "description": "\u0414\u0443\u043c\u0430\u044e - \u041e \u043a\u043e\u043c? \u041e \u0447\u0451\u043c?",
+          "application": "words",
+          "rules": [
+            
+          ]
+        }
+      ]
+    },
+    {
+      "locale": "en-US",
+      "name": "English (US)",
+      "english_name": "English (US)",
+      "native_name": "English (US)",
+      "right_to_left": false,
+      "enabled": true,
+      "google_key": "en",
+      "facebook_key": "en-US",
+      "myheritage_key": null,
+      "curse_words": null,
+      "context_rules": {
+        "date": {
+          "past": {
+            "operator": "is_in",
+            "value": "past"
+          },
+          "future": {
+            "operator": "is_in",
+            "value": "future"
+          },
+          "present": {
+            "operator": "is_in",
+            "value": "present"
+          }
+        },
+        "gender_list": {
+          "one": {
+            "part1": "contains",
+            "value1": "one_element",
+            "multipart": "false",
+            "part2": "is",
+            "value2": "male"
+          },
+          "many": {
+            "part1": "contains",
+            "value1": "at_least_two_elements",
+            "multipart": "false",
+            "part2": "are",
+            "value2": "all_male"
+          }
+        },
+        "gender": {
+          "male": {
+            "operator": "is",
+            "value": "male"
+          },
+          "female": {
+            "operator": "is",
+            "value": "female"
+          },
+          "unknown": {
+            "operator": "is",
+            "value": "unknown"
+          }
+        },
+        "number": {
+          "one": {
+            "part1": "is",
+            "value1": "1",
+            "multipart": "false",
+            "operator": "and",
+            "part2": "is",
+            "value2": ""
+          },
+          "many": {
+            "part1": "is_not",
+            "value1": "1",
+            "multipart": "false",
+            "operator": "and",
+            "part2": "is",
+            "value2": ""
+          }
+        }
+      },
+      "language_cases": [
+        {
+          "keyword": "nom",
+          "latin_name": "Nominative",
+          "native_name": "Nominative",
+          "description": "Used for any noun or pronoun that is the  subject of a verb",
+          "application": "phrase",
+          "rules": [
+            
+          ]
+        },
+        {
+          "keyword": "obj",
+          "latin_name": "Objective",
+          "native_name": "Objective",
+          "description": "Used in the direct object, indirect object, object of preposition, object complement, and subject of an infinitive",
+          "application": "phrase",
+          "rules": [
+            
+          ]
+        },
+        {
+          "keyword": "ord",
+          "latin_name": "Ordinal",
+          "native_name": "Ordinal",
+          "description": "The adjective form of the cardinal numbers",
+          "application": "phrase",
+          "rules": [
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "ends_in",
+              "value1": "1",
+              "operator": "and",
+              "part2": "does_not_end_in",
+              "value2": "11",
+              "operation": "append",
+              "operation_value": "st"
+            },
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "ends_in",
+              "value1": "2",
+              "operator": "and",
+              "part2": "does_not_end_in",
+              "value2": "12",
+              "operation": "append",
+              "operation_value": "nd"
+            },
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "ends_in",
+              "value1": "3",
+              "operator": "and",
+              "part2": "does_not_end_in",
+              "value2": "13",
+              "operation": "append",
+              "operation_value": "rd"
+            },
+            {
+              "multipart": false,
+              "gender": "none",
+              "part1": "ends_in",
+              "value1": "0,4,5,6,7,8,9,11,12,13",
+              "operation": "append",
+              "operation_value": "th"
+            }
+          ]
+        },
+        {
+          "keyword": "ordinal",
+          "latin_name": "Ordinal",
+          "native_name": "Ordinal",
+          "description": "The adjective form of the cardinal numbers",
+          "application": "phrase",
+          "rules": [
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "is",
+              "value1": "1",
+              "operation": "replace",
+              "operation_value": "first"
+            },
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "is",
+              "value1": "2",
+              "operation": "replace",
+              "operation_value": "second"
+            },
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "is",
+              "value1": "3",
+              "operation": "replace",
+              "operation_value": "third"
+            },
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "ends_in",
+              "value1": "1",
+              "operator": "and",
+              "part2": "does_not_end_in",
+              "value2": "11",
+              "operation": "append",
+              "operation_value": "st"
+            },
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "ends_in",
+              "value1": "2",
+              "operator": "and",
+              "part2": "does_not_end_in",
+              "value2": "12",
+              "operation": "append",
+              "operation_value": "nd"
+            },
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "ends_in",
+              "value1": "3",
+              "operator": "and",
+              "part2": "does_not_end_in",
+              "value2": "13",
+              "operation": "append",
+              "operation_value": "rd"
+            },
+            {
+              "multipart": false,
+              "gender": "none",
+              "part1": "ends_in",
+              "value1": "0,4,5,6,7,8,9,11,12,13",
+              "operation": "append",
+              "operation_value": "th"
+            }
+          ]
+        },
+        {
+          "keyword": "pos",
+          "latin_name": "Possessive",
+          "native_name": "Possessive",
+          "description": "Used to indicate possession (i.e., ownership). It is usually created by adding 's to the word",
+          "application": "phrase",
+          "rules": [
+            {
+              "multipart": false,
+              "gender": "none",
+              "part1": "ends_in",
+              "value1": "s",
+              "operation": "append",
+              "operation_value": "'"
+            },
+            {
+              "multipart": false,
+              "gender": "none",
+              "part1": "does_not_end_in",
+              "value1": "s",
+              "operation": "append",
+              "operation_value": "'s"
+            }
+          ]
+        },
+        {
+          "keyword": "times",
+          "latin_name": "Iteration",
+          "native_name": "Iteration",
+          "description": "The iteration form of the cardinal numbers",
+          "application": "phrase",
+          "rules": [
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "is",
+              "value1": "1",
+              "operation": "replace",
+              "operation_value": "once"
+            },
+            {
+              "multipart": true,
+              "gender": "none",
+              "part1": "is",
+              "value1": "2",
+              "operation": "replace",
+              "operation_value": "twice"
+            },
+            {
+              "multipart": false,
+              "gender": "none",
+              "part1": "is_not",
+              "value1": "1,2,3",
+              "operation": "append",
+              "operation_value": " times"
+            }
+          ]
+        }
+      ]
+    }    
+  ]
+}
