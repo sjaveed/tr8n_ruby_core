@@ -22,33 +22,25 @@
 #++
 
 class Tr8n::Rules::Gender < Tr8n::Rules::Base
-
-  attributes :operator, :value
+  belongs_to :language
+  attributes :type, :keyword, :operator, :value
 
   def self.key
-    "gender" 
-  end
-
-  def self.suffixes
-    Tr8n::Config.rules_engine[:gender_rule][:token_suffixes]
-  end
-
-  def self.gender_method_name
-    Tr8n::Config.rules_engine[:gender_rule][:object_method]
+    :gender
   end
 
   def self.token_value(token)
     if token.is_a?(Hash)
       return nil unless token[:object]
-      return token[:object][gender_method_name]
+      return token[:object][method_name]
     end
 
-    return nil unless token and token.respond_to?(gender_method_name)
-    token.send(gender_method_name)
+    return nil unless token and token.respond_to?(method_name)
+    token.send(method_name)
   end
 
   def self.gender_object_value_for(type)
-    Tr8n::Config.rules_engine[:gender_rule][:method_values][type]
+    Tr8n.config.rules_engine[:gender_rule][:method_values][type]
   end
 
   def gender_object_value_for(type)

@@ -22,7 +22,8 @@
 #++
 
 class Tr8n::Component < Tr8n::Base
-  attributes :application, :key, :name, :description, :state
+  belongs_to :application
+  attributes :key, :name, :description, :state
   
   def sources
     application.get("component/sources", {:key => key}, {:class => Tr8n::Source, :application => application})

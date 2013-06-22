@@ -23,30 +23,29 @@
 
 
 class Tr8n::Translation < Tr8n::Base
+  belongs_to :translation_key, :language
   attributes :locale, :label, :context
 
-  def initialize(attrs = {})
-    super
-    if attrs['context']
-      ctx = {}
-      attrs['context'].each do |token, rule_def|
-        ctx[token.to_sym] = Tr8n::Rules::Base.rule_class(rule_def['type']).new(rule_def)
-      end
-      self.context = ctx
-    end
+  def token_value_from_hash(token_values, token_name)
+    token_value = token_values[token_name.to_sym]
+    if token_value.is_a?(Array)
+      token_value = token_value.first   
+    elsif token_value.is_a?(Hash) 
+      token_value = token_value[:subject]
+    end 
+    token_value
   end
 
   # checks if the translation is valid for the given tokens
   def matches_rules?(token_values)
     return true if context.nil? or context.empty?   # doesn't have any rules
-    
-    context.each do |token, rule|
-      # TODO: we need to support multiple versions of the token value: array, hash, etc...
-      # it should be possible to have multiple rules per token - !
 
-      token_value = token_values[token]
-      token_value = token_value.first if token_value.is_a?(Array)
-      return false unless rule.evaluate(token_value)
+    context.each do |token_name, rules|
+      token_value = token_value_from_hash(token_values, token_name)
+      rules.each do |rule_def|
+        rule = language.context_rule_by_type_and_key(rule_def['type'], rule_def['key'])
+        return false unless rule and rule.evaluate(token_value)
+      end
     end
     
     true

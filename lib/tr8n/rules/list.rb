@@ -22,23 +22,11 @@
 #++
 
 class Tr8n::Rules::List < Tr8n::Rules::Base
-  attributes :value
+  belongs_to :language
+  attributes :type, :keyword, :value
 
   def self.key
-    "list" 
-  end
-
-  def self.suffixes
-    Tr8n::Config.rules_engine[:list_rule][:token_suffixes]
-  end
-  
-  def self.list_method_name
-    Tr8n::Config.rules_engine[:list_rule][:object_method]
-  end
-
-  def self.token_value(token)
-    return nil unless token and token.respond_to?(list_method_name)
-    token.send(list_method_name)
+    :list
   end
 
   # FORM: [one, many]

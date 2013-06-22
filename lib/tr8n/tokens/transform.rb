@@ -83,28 +83,29 @@ class Tr8n::Tokens::Transform < Tr8n::Tokens::Base
 
     object    
   end
-  
-  def validate_language_rule
-    unless dependant?
-      raise Tr8n::Exception.new("Unknown dependency type for #{full_name} token in #{original_label}; no way to apply the transform method.")
-    end
-  end
-  
-  def substitute(translation_key, label, values = {}, options = {}, language = Tr8n::Config.current_language)
+    
+  def substitute(translation_key, language, label, values, options)
     object = values[name_key]
     unless object
       raise Tr8n::Exception.new("Missing value for a token: #{full_name}")
     end
     
-    validate_language_rule
-    
+    if transformable_language_rule_classes.nil? or transformable_language_rule_classes.empty?
+      raise Tr8n::Exception.new("The token #{full_name} in \"#{original_label}\" is not associated with any rule types; no way to apply the transform method.")
+    end
+
+    if transformable_language_rule_classes.size > 1
+      raise Tr8n::Exception.new("The token #{full_name} in \"#{original_label}\" is associated with multiple rule types; no way to apply the transform method.")
+    end
+
+    language_rule = transformable_language_rule_classes.first
+
     substitution_value = [] 
     if allowed_in_translation?
       substitution_value << token_value(object, options, language) 
       substitution_value << " " 
     end
     substitution_value << language_rule.transform(self, token_object(object), piped_params, translation_key.language)
-
     label.gsub(full_name, substitution_value.join(""))    
   end
   

@@ -22,12 +22,14 @@
 #++
 
 class Tr8n::LanguageCase < Tr8n::Base
-  attributes :keyword, :latin_name, :native_name, :description, :application, :rules
+  belongs_to  :language
+  attributes  :keyword, :latin_name, :native_name, :description, :application
+  has_many    :rules
 
   def initialize(attrs = {})
     super
     if attrs['rules']
-      self.attributes[:rules] = attrs['rules'].collect{ |rule| Tr8n::LanguageCaseRule.new(rule) }
+      self.attributes[:rules] = attrs['rules'].collect{ |rule| Tr8n::LanguageCaseRule.new(rule.merge(:language_case => self)) }
     end
   end
 
@@ -91,9 +93,9 @@ class Tr8n::LanguageCase < Tr8n::Base
   def decorate_language_case(case_map_key, case_value, case_rule, options = {})
     return case_value if options[:skip_decorations]
     return case_value if language.default?
-    return case_value if Tr8n::Config.current_user_is_guest?
-    return case_value unless Tr8n::Config.current_user_is_translator?
-    return case_value unless Tr8n::Config.current_translator.enable_inline_translations?
+    return case_value if Tr8n.config.current_user_is_guest?
+    return case_value unless Tr8n.config.current_user_is_translator?
+    return case_value unless Tr8n.config.current_translator.enable_inline_translations?
     
     "<span class='tr8n_language_case' case_id='#{id}' rule_id='#{case_rule ? case_rule.id : ''}' case_key='#{case_map_key.gsub("'", "\'")}'>#{case_value}</span>"
   end

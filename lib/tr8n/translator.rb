@@ -22,10 +22,10 @@
 #++
 
 class Tr8n::Translator < Tr8n::Base
-  attributes :id, :inline, :manager, :code, :access_token 
+  attributes :application, :id, :inline, :manager, :code, :access_token 
 
-  def self.authorize(username, password)
+  def self.authorize(username, password, options = {})
 
   end
-  
+
 end

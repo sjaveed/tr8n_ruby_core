@@ -21,39 +21,22 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module Tr8nCore
+require 'json'
+
+class Tr8n::Helper
+
+  def self.load_json(file_path)
+    JSON.parse(File.read("#{root}#{file_path}"))
+  end
+
+  def self.load_yml(file_path, for_env = env)
+    YAML.load_file("#{root}#{file_path}")
+  end
+
+  def self.guid
+    (0..16).to_a.map{|a| rand(16).to_s(16)}.join
+  end  
 
 end
 
-module Tr8n
-  module Tokens
-  end
-
-  module Rules
-  end
-
-  module Decorators
-  end
-end
-
-[
- "tr8n/base.rb",
- "tr8n",
- "tr8n/rules/base.rb",
- "tr8n/rules",
- "tr8n/tokens/base.rb",
- "tr8n/tokens",
- "tr8n/decorators/base.rb",
- "tr8n/decorators",
- "tr8n_core/ext",
-].each do |f|
-  if f.index('.rb')
-    file = File.expand_path(File.join(File.dirname(__FILE__), f))
-    require(file)
-  else
-    Dir[File.expand_path("#{File.dirname(__FILE__)}/#{f}/*.rb")].sort.each do |file|
-      require(file)
-    end
-  end
-end
 

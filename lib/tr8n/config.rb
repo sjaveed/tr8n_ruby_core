@@ -21,31 +21,116 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-class Tr8n::Config
+require 'json'
 
-  def init(key, secret, opts = {})
-    opts[:host] ||= "tr8nhub.com"
-    @application = Tr8n::Application.init(opts[:host], key, secret)
+module Tr8n
+  def self.config
+    @config ||= begin
+      Tr8n::Config.new
+    end
+  end
+end
+
+# Acts as a global singleton that holds all Tr8n configuration
+# The class can be extended with a different implementation, as long as the interface is supported
+class Tr8n::Config < Tr8n::Base
+  attributes :application, :default_locale
+  thread_safe_attributes :current_user, :current_language, :current_translator, :current_source, :current_component
+  thread_safe_attributes :block_options  
+
+  def root
+    @root ||= File.expand_path(File.dirname(__FILE__))
   end
 
-  def application
-    @application
+  def enabled?
+    true
   end
 
-  def current_language
-    @current_language
+  def disabled?
+    not enabled?
   end
 
-  def current_language=(language)
-    @current_language = language
-  end
-
-  def self.enable_caching?
+  def enable_caching?
     false
   end
 
-  def self.cache_store
+  def cache_store
     nil
   end
 
+  def block_options
+    super || {}
+  end
+
+  def rules_engine
+    {
+      :number => {
+        :class            => Tr8n::Rules::Number,
+        :tokens           => ["count", "num", "age", "hours", "minutes", "years", "seconds"],
+        :object_method    => "to_i"
+      },
+      :gender => {
+        :class            => Tr8n::Rules::Gender,
+        :tokens           => ["user", "profile", "actor", "target"],
+        :object_method    => "gender",
+        :method_values    =>  {
+          :female         => "female",
+          :male           => "male",
+          :neutral        => "neutral",
+          :unknown        => "unknown"
+        }
+      },
+      :gender_list => {   # requires gender rule to be present
+        :class            => Tr8n::Rules::GenderList,
+        :tokens           => ["users", "profiles", "actors", "targets"],
+        :object_method    => "size"
+      },
+      :list => {
+        :class            => Tr8n::Rules::List,
+        :tokens           => ["list", "items", "objects", "elements"],
+        :object_method    => "size"
+      }, 
+      :date => {                
+        :class            => Tr8n::Rules::Date,
+        :tokens           => ["date"],
+        :object_method    => "to_date"
+      },
+      :value => {             
+        :class            => Tr8n::Rules::Value,
+        :tokens           => "*",
+        :object_method    => "to_s"
+      }
+    }
+  end
+
+  def rule_class_by_type(type)
+    return nil unless rules_engine[type.to_sym]
+    rules_engine[type.to_sym][:class]
+  end
+
+  def rule_types_by_token_name(token_name)
+    types = []
+    sanitized_token_name = token_name.split('_').last.tr('^A-Za-z', '')
+    rules_engine.each do |type, config|
+      if config[:tokens] == '*' or config[:tokens].include?(sanitized_token_name)
+        types << type 
+      end
+    end
+    types
+  end
+
+  def token_classes
+    {
+      'data'        => [Tr8n::Tokens::Data, Tr8n::Tokens::Hidden, Tr8n::Tokens::Method, Tr8n::Tokens::Transform],
+      'decoration'  => [Tr8n::Tokens::Decoration] 
+    }
+  end
+
+  def data_token_classes
+    token_classes['data']
+  end
+
+  def decoration_token_classes
+    token_classes['decoration']
+  end
 end

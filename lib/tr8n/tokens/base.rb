@@ -25,16 +25,15 @@ class Tr8n::Tokens::Base
   
   def self.register_data_tokens(label)
     tokens = []
-    Tr8n::Config.data_token_classes.each do |token_class|
+    Tr8n.config.data_token_classes.each do |token_class|
       tokens << token_class.parse(label)
     end
-
     tokens.flatten
   end
 
   def self.register_decoration_tokens(label)
     tokens = []
-    Tr8n::Config.decoration_token_classes.each do |token_class|
+    Tr8n.config.decoration_token_classes.each do |token_class|
       tokens << token_class.parse(label)
     end
     tokens.flatten
@@ -77,10 +76,6 @@ class Tr8n::Tokens::Base
     @permutable_name ||= name.split(".").first
   end
 
-  def suffix
-    @suffix ||= name.split('_').last
-  end
-
   def sanitized_name
     "{#{name}}"
   end
@@ -111,7 +106,7 @@ class Tr8n::Tokens::Base
   end
 
   def has_case_key?
-    not case_key.blank?
+    not case_key.nil?
   end
 
   def caseless_name
@@ -137,63 +132,55 @@ class Tr8n::Tokens::Base
     "{#{name_for_case(case_key)}}"
   end
 
-  def type
+  ##############################################################################
+  # Token of a form {user:gender,value}  
+  def types
     return nil unless caseless_name.index(':')
-    @type ||= begin 
+    @types ||= begin 
       parts = caseless_name.split(':')
       if parts.size == 1 # provided : without a type
         nil
       else
-        parts.last
+        parts.last.split(',').collect{|part| part.strip}
       end
     end
   end
 
-  def has_type?
-    not type.blank?
+  # Token type can either be defined inline or configured through a suffix
+  # {user:gender} or {user}  - user will respond to gender rule in both cases
+  #
+  # TODO: make it possible for a token to respond to multiple types
+  # {user:gender,value::pos}
+  def has_types?
+    not (types.nil? or types.empty?)
   end
 
-  def language_rules
-    @language_rules ||= begin
-      if has_type? # if token has a type - force that type and nothing else
-        rule = Tr8n::Config.current_language.language_rule_dependencies[type]
-        unless rule
-          raise Tr8n::Exception.new("Unknown dependency type for #{full_name} token")
+  def associated_rule_types
+    @associated_rule_types ||= has_types? ? types : Tr8n.config.rule_types_by_token_name(name)
+  end
+
+  # get languages rules that correspond to this token
+  def language_rule_classes
+    @language_rule_classes ||= begin
+      rule_classes = [] 
+      associated_rule_types.each do |type|
+        unless Tr8n.config.rule_class_by_type(type)
+          raise Tr8n::Exception.new("Undefined rule type #{type} for #{full_name}")
         end
-        [rule]
-      else # find all language rules for the suffix
-        [] + Tr8n::Config.current_language.language_rules_for_suffix(suffix)
-      end
+        rule_classes << Tr8n.config.rule_class_by_type(type)
+      end 
+      rule_classes
     end
   end
 
-  def dependency_rules
-    @dependency_rules ||= language_rules.select{|rule| rule.transformable?}
-  end
-
-  def dependencies
-    return nil unless dependant?
-    @dependencies ||= language_rules.collect{|rule| rule.dependency}
-  end
-
-  def dependency
-    return nil unless dependant?
-    @dependency ||= language_rule.dependency
-  end
-
-  # used for transform tokens - be aware that if you have multiple rules on a token - the first one will be selected
-  def language_rule
-    @language_rule ||= dependency_rules.first
-  end
-
-  def dependant?
-    not dependency_rules.empty?
+  def transformable_language_rule_classes
+    @transformable_language_rule_classes ||= language_rule_classes.select{|klass| klass.transformable?}
   end
 
   def sanitize_token_value(object, value, options, language)
     value = "#{value.to_s}" unless value.is_a?(String)
   
-    unless Tr8n::Config.block_options[:skip_html_escaping]
+    unless Tr8n.config.block_options[:skip_html_escaping]
       if options[:sanitize_values] and not value.html_safe?
         value = ERB::Util.html_escape(value)
       end
@@ -410,24 +397,24 @@ class Tr8n::Tokens::Base
   #
   ##############################################################################
   def apply_case(object, value, options, language)
-    return value unless Tr8n::Config.application.enable_language_cases?
+    return value unless Tr8n.config.application.enable_language_cases?
     lcase = language.case_for(case_key)
     return value unless lcase
     lcase.apply(object, value, options)
   end
 
-  def substitute(translation_key, label, values = {}, options = {}, language = Tr8n::Config.current_language)
+  def substitute(translation_key, language, label, values, options)
     # get the object from the values
     object = values[name_key]
 
     # see if the token is a default html token  
-    object = Tr8n::Config.application.default_data_token(name_key) if object.nil?
+    object = language.application.default_data_token(name_key) if object.nil?
 
     if object.nil? and not values.key?(name_key) 
       raise Tr8n::Exception.new("Missing value for a token: #{full_name}")
     end
   
-    if object.nil? and not Tr8n::Config.allow_nil_token_values?
+    if object.nil? and not Tr8n.config.allow_nil_token_values?
       raise Tr8n::Exception.new("Token value is nil for a token: #{full_name}")
     end
   

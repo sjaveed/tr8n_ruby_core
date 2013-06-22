@@ -22,24 +22,13 @@
 #++
 
 class Tr8n::Rules::Date < Tr8n::Rules::Base
-  attributes :value
+  belongs_to :language
+  attributes :type, :keyword, :value
 
   def self.key
-    "date" 
+    :date
   end
 
-  def self.suffixes
-    Tr8n::Application.current.rules[:date][:token_suffixes]
-  end
-
-  def self.date_method_name
-    Tr8n::Config.rules_engine[:date_rule][:object_method]
-  end
-  
-  def self.token_value(token)
-    return nil unless token and token.respond_to?(date_method_name)
-    token.send(date_method_name)
-  end
 
   # FORM: [past, present, future]
   # This event {date| past: took place, present: is taking place, future: will take place} on {date}.

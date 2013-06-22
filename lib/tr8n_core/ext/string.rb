@@ -21,39 +21,33 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module Tr8nCore
+class String
 
+  def translate(desc = "", tokens = {}, options = {}, language = Tr8n::Config.current.language)
+    language.translate(self, desc, tokens, options)
+  end
+
+  def trl(desc = "", tokens = {}, options = {}, language = Tr8n::Config.current.language)
+    translate(desc, tokens, options.merge(:skip_decorations => true), language)
+  end
+
+  def tr8n_translated
+    return self if frozen?
+    @tr8n_translated = true
+    self.html_safe
+    self
+  end
+
+  def tr8n_translated?
+    @tr8n_translated
+  end
+
+  def html_safe
+    @html_safe = true
+    self
+  end  
+
+  def html_safe?
+    @html_safe
+  end  
 end
-
-module Tr8n
-  module Tokens
-  end
-
-  module Rules
-  end
-
-  module Decorators
-  end
-end
-
-[
- "tr8n/base.rb",
- "tr8n",
- "tr8n/rules/base.rb",
- "tr8n/rules",
- "tr8n/tokens/base.rb",
- "tr8n/tokens",
- "tr8n/decorators/base.rb",
- "tr8n/decorators",
- "tr8n_core/ext",
-].each do |f|
-  if f.index('.rb')
-    file = File.expand_path(File.join(File.dirname(__FILE__), f))
-    require(file)
-  else
-    Dir[File.expand_path("#{File.dirname(__FILE__)}/#{f}/*.rb")].sort.each do |file|
-      require(file)
-    end
-  end
-end
-

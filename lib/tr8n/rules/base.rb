@@ -22,33 +22,28 @@
 #++
 
 class Tr8n::Rules::Base < Tr8n::Base
+  belongs_to :language
   attributes :type, :keyword
-
-  def self.rule_class(type)
-    {
-      'number' => Tr8n::Rules::Number,
-      'gender' => Tr8n::Rules::Gender,
-      'date' => Tr8n::Rules::Date,
-      'list' => Tr8n::Rules::List,
-      'gender_list' => Tr8n::Rules::GenderList,
-      'value' => Tr8n::Rules::Value
-    }[type]
-  end
-
-  def self.suffixes
-    []  
-  end
-  
-  def self.dependant?(token)
-    token.dependency == dependency or suffixes.include?(token.suffix)
-  end
 
   def self.key
     raise Tr8n::Exception.new("This method must be implemented in the extending rule") 
   end
+
+  def self.rule_class(type)
+    Tr8n.config.rule_class_by_type(type)
+  end
+
+  def self.config
+    Tr8n.config.rules_engine[key]
+  end
+
+  def self.method_name
+    config[:object_method]
+  end
   
   def self.token_value(token)
-    token.to_s
+    return nil unless token and token.respond_to?(method_name)
+    token.send(method_name)
   end
 
   def token_value(token)
@@ -86,7 +81,7 @@ class Tr8n::Rules::Base < Tr8n::Base
     matched_key = nil
     options.keys.each do |keyword|
       next if keyword == :other  # other is a special keyword - don't process it
-      rule = language.context_rules_by_type_and_keyword(self.key, keyword)
+      rule = language.context_rule_by_type_and_keyword(self.key, keyword)
 
       unless rule
         raise Tr8n::Exception.new("Invalid rule name #{keyword} for transform token #{token}")

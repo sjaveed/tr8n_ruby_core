@@ -22,27 +22,16 @@
 #++
 
 class Tr8n::Rules::Value < Tr8n::Rules::Base
+  belongs_to :language
+  attributes :type, :keyword
   attributes :operator, :value
 
   def self.key
-    "value" 
-  end
-  
-  def self.suffixes
-    Tr8n::Config.rules_engine[:value_rule][:token_suffixes]
+    :value
   end
 
   def self.transformable?
     false
-  end
-
-  def self.value_method_name
-    Tr8n::Config.rules_engine[:value_rule][:object_method]
-  end
-
-  def self.token_value(token)
-    return nil unless token and token.respond_to?(value_method_name)
-    token.send(value_method_name)
   end
 
   def evaluate(token)

@@ -22,9 +22,10 @@
 #++
 
 class Tr8n::Language < Tr8n::Base
-  attributes  :application, :locale, :name, :english_name, :native_name, :right_to_left, :enabled
+  belongs_to  :application
+  attributes  :locale, :name, :english_name, :native_name, :right_to_left, :enabled
   attributes  :google_key, :facebook_key, :myheritage_key
-  attributes  :context_rules, :language_cases
+  has_many    :context_rules, :language_cases
 
   def initialize(attrs = {})
     super
@@ -35,20 +36,24 @@ class Tr8n::Language < Tr8n::Base
       attrs['context_rules'].each do |rule_class, hash|
         self.attributes[:context_rules][rule_class] ||= {}
         hash.each do |keyword, rule|
-          self.attributes[:context_rules][rule_class][keyword] = Tr8n::Rules::Base.rule_class(rule_class).new(rule)
+          self.attributes[:context_rules][rule_class][keyword] = Tr8n::Rules::Base.rule_class(rule_class).new(rule.merge(:language => self))
         end
       end
     end
 
     if attrs['language_cases']
-      self.attributes[:language_cases] = attrs['language_cases'].collect{ |lcase| Tr8n::LanguageCase.new(lcase) }
+      self.attributes[:language_cases] = attrs['language_cases'].collect{ |lcase| Tr8n::LanguageCase.new(lcase.merge(:language => self)) }
     end
   end
 
-  def context_rules_by_type_and_keyword(type, keyword)
+  def context_rules_by_type(type)
+    self.context_rules[type.to_s]
+  end
+
+  def context_rule_by_type_and_key(type, key)
     return nil unless self.context_rules
     return nil unless self.context_rules[type.to_s]
-    self.context_rules[type.to_s][keyword.to_s]
+    self.context_rules[type.to_s][key.to_s]
   end
 
   def case_keyword_maps
@@ -60,7 +65,11 @@ class Tr8n::Language < Tr8n::Base
       hash
     end
   end
-  
+
+  def default?
+    Tr8n.config.default_locale == locale
+  end
+
   def case_for(case_keyword)
     case_keyword_maps[case_keyword]
   end
@@ -86,12 +95,33 @@ class Tr8n::Language < Tr8n::Base
   def translate(label, desc = "", tokens = {}, options = {})
     raise Tr8n::Exception.new("The label #{label} is being translated twice") if label.tr8n_translated?
 
-    unless Tr8n::Config.enabled?
-      return Tr8n::TranslationKey.substitute_tokens(label, tokens, options, self).tr8n_translated.html_safe
+    unless Tr8n.config.enabled?
+      return Tr8n::TranslationKey.substitute_tokens(label, tokens, options, self).tr8n_translated
     end
 
-    translation_key = Tr8n::TranslationKey.fetch_or_register(label, desc, options.merge(:application => application))
-    translation_key.translate(self, tokens.merge(:viewing_user => Tr8n::Config.current_user), options).tr8n_translated.html_safe
+    # create a temporary key
+    tkey = Tr8n::TranslationKey.new({
+        :application => application,
+        :label => label, 
+        :description => desc,
+        :locale => options[:locale] || Tr8n.config.block_options[:locale] || Tr8n.config.default_locale,
+        :level => options[:level] || Tr8n.config.block_options[:level],
+        :translations => []  
+    })
+
+    source_key = options[:source] || Tr8n.config.block_options[:source] || Tr8n.config.current_source
+    if source_key
+      source = application.source_by_key(source_key) 
+      source_translation_keys = source.fetch_translations_for_language(self, options)   
+      ckey = source_translation_keys[tkey.key]
+      application.register_missing_key(tkey, source) unless ckey
+      ckey ||= tkey
+    else
+      ckey = application.traslation_key_by_key(tkey.key)
+      ckey = tkey.fetch_translations_for_language(self, options) unless ckey
+    end
+
+    ckey.translate(self, tokens.merge(:viewing_user => Tr8n.config.current_user), options).tr8n_translated
   end
   alias :tr :translate
 

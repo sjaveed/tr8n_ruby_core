@@ -47,7 +47,7 @@ class Tr8n::Tokens::Method < Tr8n::Tokens::Base
     @suffix ||= object_name.split('_').last
   end
 
-  def substitute(translation_key, label, values = {}, options = {}, language = Tr8n::Config.current_language)
+  def substitute(translation_key, language, label, values, options)
     object = values[object_name.to_sym]
     raise Tr8n::Exception.new("Missing value for a token: #{full_name}") unless object
     object_value = sanitize_token_value(object, object.send(object_method_name), options.merge(:sanitize_values => true), language)

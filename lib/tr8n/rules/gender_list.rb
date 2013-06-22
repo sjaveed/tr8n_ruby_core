@@ -22,23 +22,16 @@
 #++
 
 class Tr8n::Rules::GenderList < Tr8n::Rules::Base
-  attributes :value1, :multipart, :part2, :value2
+  belongs_to :language
+  attributes :type, :keyword, :value1, :multipart, :part2, :value2
     
   def self.key
-    "gender_list" 
-  end
-
-  def self.suffixes
-    Tr8n::Config.rules_engine[:gender_list_rule][:token_suffixes]
-  end
-
-  def self.list_method_name
-    Tr8n::Config.rules_engine[:gender_list_rule][:object_method]
+    :gender_list
   end
 
   def self.token_value(token)
-    return nil unless token and token.respond_to?(list_method_name)
-    token.send(list_method_name)
+    return nil unless token and token.respond_to?(method_name)
+    token.send(method_name)
   end
 
   def self.male_female_occupants(arr)

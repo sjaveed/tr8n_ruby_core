@@ -22,29 +22,21 @@
 #++
 
 class Tr8n::Rules::Number < Tr8n::Rules::Base
-
+  belongs_to :language
+  attributes :type, :keyword
   attributes :multipart, :part1, :value1, :part2, :value2, :operator
 
   def self.key
-    "number" 
-  end
-
-  def self.suffixes
-    Tr8n::Config.rules_engine[:numeric_rule][:token_suffixes]
-  end
-
-  def self.number_method_name
-    Tr8n::Config.rules_engine[:numeric_rule][:object_method]
+    :number
   end
 
   def self.token_value(token)
     if token.is_a?(Hash)
       return nil unless token[:object]
-      return token[:object][number_method_name]
+      return token[:object][method_name]
     end
 
-    return nil unless token and token.respond_to?(number_method_name)
-    token.send(number_method_name)
+    super
   end
 
   # FORM: [singular(, plural)]

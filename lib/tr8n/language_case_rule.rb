@@ -22,7 +22,8 @@
 #++
 
 class Tr8n::LanguageCaseRule < Tr8n::Base
-  attributes :gender, :operator, :multipart, :part1, :value1, :part2, :value2, :operation, :operation_value
+  belongs_to  :language_case
+  attributes  :gender, :operator, :multipart, :part1, :value1, :part2, :value2, :operation, :operation_value
 
   def evaluate(object, value)
     value = value.to_s

@@ -26,13 +26,15 @@ require 'faraday'
 API_PATH = '/tr8n/api/'
 
 class Tr8n::Application < Tr8n::Base
-  attributes :host, :key, :secret, :name, :description, :definition, :languages, :version, :updated_at
+  attributes :host, :key, :secret, :name, :description, :definition, :version, :updated_at
+  has_many :languages, :translation_keys, :sources, :components
 
-  def self.init(host, key, secret)
-    app = api("application", {:client_id => key, :definition => true}, {:host => host, :class => Tr8n::Application})    
-    app.key = key
-    app.secret = secret
-    app
+  def self.init(host, key, secret, options = {})
+    api("application", {:client_id => key, :definition => true}, {:host => host, :class => Tr8n::Application, :attributes => {
+      :host => host, 
+      :key => key,
+      :secret => secret
+    }})   
   end
 
   def initialize(attrs = {})
@@ -81,75 +83,63 @@ class Tr8n::Application < Tr8n::Base
   end
  
   def translators
-    Tr8n::Cache.fetch("application_translators") do 
-      get("application/translators")
-    end
+    get("application/translators", {}, {:class => Tr8n::Translator, :attributes => {:application => self}})
   end
 
   def default_decoration_tokens
     definition["default_decoration_tokens"]
   end
 
+  def default_decoration_token(token)
+    default_decoration_tokens[token.to_s]
+  end
+
   def default_data_tokens
     definition["default_data_tokens"]
-  end
-
-  def enable_language_cases?
-    self.definition["enable_language_cases"]
-  end
-
-  def enable_language_flags?
-    self.definition["enable_language_flags"]
-  end
-
-  def default_data_tokens
-    self.definition["default_data_tokens"]
   end
 
   def default_data_token(token)
     default_data_tokens[token.to_s]
   end
 
-  def default_decoration_tokens
-    self.definition["default_decoration_tokens"]
-  end
-
-  def default_decoration_token(token)
-    default_decoration_tokens[token.to_s]
+  def enable_language_cases?
+    definition["enable_language_cases"]
   end
 
   def rules
-    self.definition["rules"]
+    definition["rules"]
+  end
+
+  def rule_config_by_type(type)
+    rules[type]
   end
 
   def sources
-    @sources ||= {}
+    self.attributes[:sources] ||= {}
   end
 
   def source_by_key(key)
-    @sources ||= {}
-    @sources[key] ||= post("source/register", {:source => key}, {:class => Tr8n::Source, :attributes => {:application => self}})
+    sources[key] ||= post("source/register", {:source => key}, {:class => Tr8n::Source, :attributes => {:application => self}})
   end
 
   def components
-    @components ||= {}
+     self.attributes[:components] ||= {}
   end
 
   def component_by_key(key)
-    @components ||= {}
-    @components[key] ||= post("component/register", {:component => key}, {:class => Tr8n::Component, :attributes => {:application => self}})
+    components[key] ||= post("component/register", {:component => key}, {:class => Tr8n::Component, :attributes => {:application => self}})
   end
 
-  def traslation_key_by_language_and_hash(language, hash)
-    @traslation_keys_by_language ||= {}
-    @traslation_keys_by_language[language.locale] ||= {}
-    @traslation_keys_by_language[language.locale][hash]
+  def translation_keys
+    self.attributes[:translation_keys] ||= {}
   end
 
-  def register_translation_key(language, tkey)
-    @traslation_keys_by_language ||= {}
-    @traslation_keys_by_language[language.locale] ||= {}
-    @traslation_keys_by_language[language.locale][tkey.key] = tkey
+  def traslation_key_by_key(key)
+    translation_keys[key]
+  end
+
+  def cache_translation_key(tkey)
+    self.translation_keys[tkey.key] = tkey
   end
 
   def register_missing_key(tkey, source)    
@@ -169,10 +159,13 @@ class Tr8n::Application < Tr8n::Base
     @missing_keys_by_sources = nil
   end
 
-  def translate(label, description = nil, tokens = {}, options = {})
-
+  def default_locale
+    @default_locale ||= definition['default_locale'] || 'en-US'
   end
 
+  def default_language
+    @default_language ||= language_by_locale(default_locale)
+  end
 
   #######################################################################################################
   ##  API Methods
@@ -195,11 +188,11 @@ class Tr8n::Application < Tr8n::Base
     
     # TODO: sign request
 
-    self.class.api(path, params, opts.merge(:host => host))
+    self.class.api(path, params, opts.merge(:host => self.host))
   end
 
   def self.api(path, params = {}, opts = {})
-    pp [:api, path, params, opts]
+    pp [:api, path, params]
 
     conn = Faraday.new(:url => opts[:host]) do |faraday|
       faraday.request(:url_encoded)               # form-encode POST params
@@ -215,7 +208,7 @@ class Tr8n::Application < Tr8n::Base
 
     data = JSON.parse(response.body)
 
-    pp data
+    # pp data
 
     unless data["error"].nil?
       raise Tr8n::Exception.new("Error: #{data["error"]}")

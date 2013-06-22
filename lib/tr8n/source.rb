@@ -22,7 +22,9 @@
 #++
 
 class Tr8n::Source < Tr8n::Base
-  attributes :application, :source, :url, :name, :description
+  belongs_to  :application
+  attributes  :source, :url, :name, :description
+  has_many    :translation_keys
 
   def self.normalize_source(url)
     return nil if url.blank?
@@ -38,35 +40,58 @@ class Tr8n::Source < Tr8n::Base
     path
   end
 
-  def fetch_keys_for_language(language, opts = {})
-    keys_with_translations = get("source/translations", {:source => source, :locale => language.locale}, {:class => Tr8n::TranslationKey})
-    keys = {}
+  def language_updated_at(language)
+    @language_updated_at ||= {}
+    @language_updated_at[language.locale]
+  end
+
+  def set_language_updated_at(language, time = Time.now)
+    @language_updated_at ||= {}
+    @language_updated_at[language.locale] = time
+  end
+
+  def language_needs_refetch?(language)
+    # by default languages will be refetched for each source every hour
+    language_updated_at(language).nil? or language_updated_at(language) < Time.now - 1.hour
+  end
+
+  def fetch_translations_for_language(language, options = {})
+    # for current translators who use inline mode - always fetch translations
+    if Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
+      keys_with_translations = application.get("source/translations", {:source => source, :locale => language.locale}, {:class => Tr8n::TranslationKey, :attributes => {:application => application, :language => language}})
+      fetched_keys = {}
+      keys_with_translations.each do |tkey|
+        fetched_keys[tkey.key] = tkey
+      end
+      return fetched_keys
+    end
+
+    # return keys if they have already been fetched recently
+    return translation_keys if translation_keys and not language_needs_refetch?(language)
+
+    set_language_updated_at(language)
+    keys_with_translations = application.get("source/translations", {:source => source, :locale => language.locale}, {:class => Tr8n::TranslationKey, :attributes => {:application => application, :language => language}})
+
+    self.attributes[:translation_keys] = {}
     keys_with_translations.each do |tkey|
-      # building global translation hash along the way, for fallback
-      Tr8n::Config.application.register_translation_key(language, tkey) if opts[:global]
-      keys[tkey.key] = tkey
+      ckey = application.translation_keys[tkey.key]
+      if ckey # if key exists in global cache, update its translations
+        ckey.set_language_translations(language, tkey.translations_for_language(language))
+      else # otherwise, add the new key to the global cache
+        application.translation_keys[tkey.key] = tkey
+        ckey = tkey
+      end
+      self.attributes[:translation_keys][ckey.key] = ckey
     end
-    keys
+    translation_keys
   end
 
-  def translation_key_by_language_and_hash(language, hash)
-    if Tr8n::Config.current_translator and Tr8n::Config.current_translator.inline?
-      # for inline translator do this always
-      @translator_keys ||= fetch_keys_for_language(language)
-      return @translator_keys[hash]
-    end
-
-    @translation_keys_by_language ||= {}
-    @translation_keys_by_language[language.locale] ||= fetch_keys_for_language(language, :global => true)
-    @translation_keys_by_language[language.locale][hash]
-  end
-
-  def reset_translator_keys
-    @translator_keys = nil
+  def translation_keys
+    self.attributes[:translation_keys] ||= {}
   end
 
   def reset
-    @translation_keys_by_language = {}
+    self.attributes[:translation_keys] = {}
   end
 
 end

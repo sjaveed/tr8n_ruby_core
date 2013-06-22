@@ -24,25 +24,25 @@
 class Tr8n::Cache
   
   def self.cache_store_params
-    [Tr8n::Config.cache_store].flatten
+    [Tr8n.config.cache_store].flatten
   end
   
   def self.cache
     return nil unless enabled?
     
     @cache ||= begin
-      if Tr8n::Config.cache_adapter == 'ActiveSupport::Cache'
+      if Tr8n.config.cache_adapter == 'ActiveSupport::Cache'
         store_params = cache_store_params
         store_params[0] = store_params[0].to_sym
         ActiveSupport::Cache.lookup_store(*store_params)
       else
-        eval(Tr8n::Config.cache_adapter)  
+        eval(Tr8n.config.cache_adapter)  
       end
     end
   end
 
   def self.enabled?
-    Tr8n::Config.enable_caching?
+    Tr8n.config.enable_caching?
   end
 
   def self.disabled?
@@ -50,7 +50,7 @@ class Tr8n::Cache
   end
   
   def self.version
-    Tr8n::Application.current.version
+    Tr8n.config.application.version
   end
   
   def self.versioned_key(key)
