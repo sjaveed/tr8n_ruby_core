@@ -14,7 +14,7 @@ describe Tr8n::Application do
 
     it "returns cached language by locale" do
       russian = @app.language_by_locale("ru")
-      pp russian.translate("{count||message,messages}", nil, :count => 10)
+      pp russian.translate("{count||message,messages}", nil, :count => 3)
     end
 
     # it "returns new language by locale" do

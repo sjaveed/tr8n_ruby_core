@@ -93,9 +93,9 @@ class Tr8n::LanguageCase < Tr8n::Base
   def decorate_language_case(case_map_key, case_value, case_rule, options = {})
     return case_value if options[:skip_decorations]
     return case_value if language.default?
-    return case_value if Tr8n.config.current_user_is_guest?
-    return case_value unless Tr8n.config.current_user_is_translator?
-    return case_value unless Tr8n.config.current_translator.enable_inline_translations?
+    return case_value if Tr8n.config.current_user
+    return case_value unless Tr8n.config.current_translator
+    return case_value unless Tr8n.config.current_translator.inline?
     
     "<span class='tr8n_language_case' case_id='#{id}' rule_id='#{case_rule ? case_rule.id : ''}' case_key='#{case_map_key.gsub("'", "\'")}'>#{case_value}</span>"
   end

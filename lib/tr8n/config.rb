@@ -62,6 +62,10 @@ class Tr8n::Config < Tr8n::Base
     super || {}
   end
 
+  def decorator_class
+    Tr8n::Decorators::Default
+  end
+
   def rules_engine
     {
       :number => {

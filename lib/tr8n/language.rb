@@ -67,7 +67,7 @@ class Tr8n::Language < Tr8n::Base
   end
 
   def default?
-    Tr8n.config.default_locale == locale
+    application.default_locale == locale
   end
 
   def case_for(case_keyword)
