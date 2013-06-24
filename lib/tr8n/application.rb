@@ -58,9 +58,7 @@ class Tr8n::Application < Tr8n::Base
   def reset!
     @language_by_locale = nil
     @featured_languages = nil
-    @sources = nil
-    @components = nil
-    @traslation_keys_by_language = nil
+    super
   end
 
   def language_by_locale(locale)
@@ -106,6 +104,10 @@ class Tr8n::Application < Tr8n::Base
     definition["enable_language_cases"]
   end
 
+  def enable_language_flags?
+    definition["enable_language_flags"]
+  end
+
   def rules
     definition["rules"]
   end
@@ -139,7 +141,14 @@ class Tr8n::Application < Tr8n::Base
   end
 
   def cache_translation_key(tkey)
-    self.translation_keys[tkey.key] = tkey
+    self.translation_keys[tkey.key] = tkey.set_application(self)
+    tkey
+  end
+
+  def cache_translation_keys(tkeys)
+    tkeys.each do |tkey|
+      cache_translation_key(tkey)
+    end
   end
 
   def register_missing_key(tkey, source)    

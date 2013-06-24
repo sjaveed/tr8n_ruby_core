@@ -1,7 +1,7 @@
 {
   "key": "29adc3257b6960703",
   "name": "Tr8n Client SDK Sample Application",
-  "description": "Automatically created from API call",
+  "description": "Demonstrates translation examples",
   "definition": {
     "default_data_tokens": {
       "ndash": "&ndash;",

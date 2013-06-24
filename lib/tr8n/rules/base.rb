@@ -79,16 +79,16 @@ class Tr8n::Rules::Base < Tr8n::Base
     options = transform_params_to_options(params)
 
     matched_key = nil
-    options.keys.each do |keyword|
-      next if keyword == :other  # other is a special keyword - don't process it
-      rule = language.context_rule_by_type_and_keyword(self.key, keyword)
+    options.keys.each do |key|
+      next if key == :other  # other is a special keyword - don't process it
+      rule = language.context_rule_by_type_and_key(self.key, key)
 
       unless rule
-        raise Tr8n::Exception.new("Invalid rule name #{keyword} for transform token #{token}")
+        raise Tr8n::Exception.new("Invalid rule name #{key} for transform token #{token}")
       end
 
       if rule.evaluate(object)
-        matched_key = keyword.to_sym
+        matched_key = key.to_sym
         break
       end
     end

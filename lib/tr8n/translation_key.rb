@@ -31,14 +31,16 @@ class Tr8n::TranslationKey < Tr8n::Base
 
   def initialize(attrs = {})
     super
-    self.key = self.class.generate_key(label, description).to_s
+    self.attributes[:key] = self.class.generate_key(label, description).to_s
+    self.attributes[:locale] ||= Tr8n.config.default_locale 
+    self.attributes[:translations] = {}
     if attrs['translations']
-      self.attributes[:translations] = {}
       attrs['translations'].each do |locale, translations|
         language = application.language_by_locale(locale)
         self.attributes[:translations][locale] ||= []
         translations.each do |trn|
-          self.attributes[:translations][locale] << Tr8n::Translation.new(trn.merge(:translation_key => self, :language => language))
+          trn = Tr8n::Translation.new(trn.merge(:translation_key => self, :locale => language.locale, :language => language))
+          self.attributes[:translations][locale] << trn
         end
       end
     end
@@ -62,6 +64,7 @@ class Tr8n::TranslationKey < Tr8n::Base
 
   def fetch_translations_for_language(language, options = {})
     return self if self.id and has_translations_for_language?(language)
+    return application.cache_translation_key(self) if options[:dry] or Tr8n.config.block_options[:dry]
 
     tkey = application.post("translation_key/translations", self.to_api_hash.merge(:locale => language.locale), {:class => Tr8n::TranslationKey, :attributes => {:application => application, :language => language}})
     ckey = application.traslation_key_by_key(self.key)
@@ -74,20 +77,32 @@ class Tr8n::TranslationKey < Tr8n::Base
     application.traslation_key_by_key(self.key)
   end
 
+  # switches to a new application
+  def set_application(app)
+    self.application = app
+    translations.each do |locale, locale_translations|
+      locale_translations.each do |t|
+        t.set_translation_key(self)
+      end
+    end
+    self
+  end
+
+  # adds new language translations for a specific locale
   def set_language_translations(language, translations)
     translations = translations.dup
-    translations.each do |tkey|
-      tkey.translation_key = self
+    translations.each do |t|
+      t.set_translation_key(self)
     end
-    self.translations[language.locale] = translations
+    self.translations[t.locale] = translations
   end
 
   def has_translations_for_language?(language)
-    translations and translations[language.locale].any?
+    translations and translations[language.locale] and translations[language.locale].any?
   end
 
   def translations_for_language(language)
-   self.translations[language.locale] || []
+    self.translations[language.locale] || []
   end
 
   def find_first_valid_translation(language, token_values)

@@ -72,10 +72,6 @@ class Tr8n::Tokens::Base
     @name ||= declared_name.split(':').first.strip
   end
 
-  def permutable_name
-    @permutable_name ||= name.split(".").first
-  end
-
   def sanitized_name
     "{#{name}}"
   end
@@ -180,7 +176,7 @@ class Tr8n::Tokens::Base
   def sanitize_token_value(object, value, options, language)
     value = "#{value.to_s}" unless value.is_a?(String)
   
-    unless Tr8n.config.block_options[:skip_html_escaping]
+    unless options[:skip_html_escaping] || Tr8n.config.block_options[:skip_html_escaping]
       if options[:sanitize_values] and not value.html_safe?
         value = ERB::Util.html_escape(value)
       end
@@ -218,7 +214,7 @@ class Tr8n::Tokens::Base
     end  
   
     # second params identifies the method to be used with the object
-    method = method_array.second
+    method = method_array[1]
     params = method_array[2..-1]
     params_with_object = [object] + params
 
@@ -236,6 +232,9 @@ class Tr8n::Tokens::Base
 
     # if second param is symbol, invoke the method on the object with the remaining values
     if method.is_a?(Symbol)
+      if object.is_a?(Hash)
+        return sanitize_token_value(object, object[:method], options.merge(:sanitize_values => true), language)
+      end        
       return sanitize_token_value(object, object.send(method, *params), options.merge(:sanitize_values => true), language)
     end
 
@@ -280,8 +279,8 @@ class Tr8n::Tokens::Base
     objects = token_value.first
   
     objects = objects.collect do |obj|
-      if token_value.second.is_a?(Array)
-        evaluate_token_method_array(obj, [obj] + token_value.second, options, language)
+      if token_value[1].is_a?(Array)
+        evaluate_token_method_array(obj, [obj] + token_value[1], options, language)
       else
         evaluate_token_method_array(obj, token_value, options, language)
       end
@@ -357,7 +356,9 @@ class Tr8n::Tokens::Base
 
       # if the first item in the array is an object, process it
       return evaluate_token_method_array(object.first, object, options, language)
-    elsif object.is_a?(Hash) 
+    end
+    
+    if object.is_a?(Hash) 
       # if object is a hash, it must be of a form: {:object => {}, :value => "", :attribute => ""}
       # either value can be passed, or the attribute. attribute will be used first
       if object[:object].nil?
@@ -366,11 +367,15 @@ class Tr8n::Tokens::Base
 
       value = object[:value]
 
-      unless object[:attribute].blank?
-        value = object[:object][object[:attribute]]
+      unless object[:attribute].nil?
+        if object[:object].is_a?(Hash)
+          value = object[:object][object[:attribute]]
+        else
+          value = object[:object].send(object[:attribute])
+        end
       end
 
-      if value.blank?
+      if value.nil?
         return raise Tr8n::Exception.new("Hash object is missing a value or attribute key for a token: #{full_name}")
       end
 

@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.files = Dir["{lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.rdoc"]
   s.test_files = Dir["spec/**/*"]
 
+  s.add_dependency 'activesupport'
   s.add_dependency 'faraday'
   s.add_dependency 'dalli'
 end

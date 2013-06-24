@@ -21,6 +21,8 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require 'active_support/inflector'
+
 class Tr8n::Rules::Number < Tr8n::Rules::Base
   belongs_to :language
   attributes :type, :keyword
@@ -33,7 +35,8 @@ class Tr8n::Rules::Number < Tr8n::Rules::Base
   def self.token_value(token)
     if token.is_a?(Hash)
       return nil unless token[:object]
-      return token[:object][method_name]
+      return token[:object][method_name] if object.is_a?(Hash)
+      return token[:object].send(method_name)
     end
 
     super
@@ -54,7 +57,7 @@ class Tr8n::Rules::Number < Tr8n::Rules::Base
     else # default falback to {|| singular} or {|| singular, plural} - mostly for English support
       if params.size == 1 # {|| singular}
         options[:one] = params[0]
-        options[:many] = params[0].pluralize
+        options[:many] = ActiveSupport::Inflector.pluralize(params[0])
       elsif params.size == 2
         options[:one] = params[0]
         options[:many] = params[1]

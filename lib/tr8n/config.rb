@@ -58,8 +58,18 @@ class Tr8n::Config < Tr8n::Base
     nil
   end
 
+  def with_block_options(opts)
+    Thread.current[:block_options] ||= []
+    Thread.current[:block_options].push(opts)
+    if block_given?
+      ret = yield
+    end
+    Thread.current[:block_options].pop
+    ret
+  end
+
   def block_options
-    super || {}
+    (Thread.current[:block_options] ||= []).last || {}
   end
 
   def decorator_class

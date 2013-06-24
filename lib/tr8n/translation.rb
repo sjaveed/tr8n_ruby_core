@@ -26,6 +26,12 @@ class Tr8n::Translation < Tr8n::Base
   belongs_to :translation_key, :language
   attributes :locale, :label, :context
 
+  # switches to a new translation key
+  def set_translation_key(tkey)
+    self.translation_key = tkey
+    self.language = tkey.application.language_by_locale(locale)
+  end
+
   def token_value_from_hash(token_values, token_name)
     token_value = token_values[token_name.to_sym]
     if token_value.is_a?(Array)

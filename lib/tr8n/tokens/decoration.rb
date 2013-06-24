@@ -67,12 +67,12 @@ class Tr8n::Tokens::Decoration < Tr8n::Tokens::Base
     label.gsub(name, "(#{index})")
   end
     
-  def handle_default_decorations(token_name, token_value, token_values)
-    unless Tr8n.config.application.default_decoration_tokens[token_name]
+  def handle_default_decorations(translation_key, token_name, token_value, token_values)
+    unless translation_key.application.default_decoration_tokens[token_name]
       raise Tr8n::Exception.new("Invalid decoration token value")
     end
 
-    default_decoration = Tr8n.config.application.default_decoration_tokens[token_name].clone
+    default_decoration = translation_key.application.default_decoration_tokens[token_name].clone
     decoration_token_values = token_values[token_name.to_sym] || []
     
     if decoration_token_values.is_a?(Array)
@@ -112,8 +112,8 @@ class Tr8n::Tokens::Decoration < Tr8n::Tokens::Base
       else
         raise Tr8n::Exception.new("Invalid decoration token value")
       end
-    elsif Tr8n.config.application.default_decoration_tokens[name]
-      substitution_value = handle_default_decorations(name, value, values)
+    elsif translation_key.application.default_decoration_tokens[name]
+      substitution_value = handle_default_decorations(translation_key, name, value, values)
     else
       raise Tr8n::Exception.new("Missing decoration token value")
     end

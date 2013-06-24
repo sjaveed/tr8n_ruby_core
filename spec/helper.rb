@@ -10,6 +10,24 @@ def load_json(file_path)
   JSON.parse(File.read("#{fixtures_root}/#{file_path}"))
 end
 
+def load_translation_keys_from_file(app, path)
+  load_json(path).each do |jkey|
+    load_translation_key_from_hash(app, jkey)
+  end
+end
+
+def load_translation_key_from_hash(app, hash)
+  app.cache_translation_key(Tr8n::TranslationKey.new(hash.merge(:application => app)))
+end
+
+def stub_object(attrs)
+  user = double()
+  attrs.each do |key, value|
+    user.stub(key) { value }
+  end
+  user
+end
+
 RSpec.configure do |config|
   config.before do
     ARGV.replace []

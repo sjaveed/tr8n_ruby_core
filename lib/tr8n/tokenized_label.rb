@@ -53,16 +53,6 @@ class Tr8n::TokenizedLabel
     @tokens = data_tokens + decoration_tokens
   end
 
-  def sanitized_tokens_hash
-    @sanitized_tokens_hash ||= begin
-      hash = {}
-      tokens.each do |token|
-        hash[token.sanitized_name] = token
-      end
-      hash
-    end
-  end
-
   def tokens?
     tokens.any?
   end
@@ -76,52 +66,13 @@ class Tr8n::TokenizedLabel
     translation_tokens.any?
   end
 
-  def sanitized_label
-    @sanitized_label ||= begin 
-      lbl = label.clone
-      data_tokens.each do |token|
-        lbl = token.prepare_label_for_translator(lbl)
-      end
-      lbl
-    end 
-  end
-
-  def tokenless_label
-    @tokenless_label ||= begin
-      lbl = label.clone
-      tokens.each_with_index do |token, index|
-        lbl = token.prepare_label_for_suggestion(lbl, index)
-      end
-      lbl
-    end
-  end 
-
-  def suggestion_tokens
-    @suggestion_tokens ||= begin
-      toks = []
+  def sanitized_tokens_hash
+    @sanitized_tokens_hash ||= begin
+      hash = {}
       tokens.each do |token|
-        if token.decoration?
-          toks << token.name
-        else  
-          toks << token.sanitized_name          
-        end
+        hash[token.sanitized_name] = token
       end
-      toks
-    end
-  end 
-
-  def words
-    return [] if label.blank?
-  
-    @words ||= begin 
-      clean_label = sanitized_label
-      parts = []
-      clean_label = clean_label.gsub(/[\,\.\;\!\-\:\'\"\[\]{}]/, "")
-    
-      clean_label.split(" ").each do |w|
-        parts << w.strip.capitalize if w.length > 3
-      end
-      parts
+      hash
     end
   end
 

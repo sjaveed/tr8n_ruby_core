@@ -32,7 +32,8 @@ class Tr8n::Rules::Gender < Tr8n::Rules::Base
   def self.token_value(token)
     if token.is_a?(Hash)
       return nil unless token[:object]
-      return token[:object][method_name]
+      return token[:object][method_name] if object.is_a?(Hash)
+      return token[:object].send(method_name)
     end
 
     return nil unless token and token.respond_to?(method_name)
