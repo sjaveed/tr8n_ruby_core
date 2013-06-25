@@ -23,11 +23,11 @@
 
 class String
 
-  def translate(desc = "", tokens = {}, options = {}, language = Tr8n::Config.current.language)
+  def translate(desc = "", tokens = {}, options = {}, language = Tr8n.config.current_language)
     language.translate(self, desc, tokens, options)
   end
 
-  def trl(desc = "", tokens = {}, options = {}, language = Tr8n::Config.current.language)
+  def trl(desc = "", tokens = {}, options = {}, language = Tr8n.config.current_language)
     translate(desc, tokens, options.merge(:skip_decorations => true), language)
   end
 

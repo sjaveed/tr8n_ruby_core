@@ -262,7 +262,8 @@ class Tr8n::Tokens::Base
   #                           :limit => 4, 
   #                           :separator => ',',
   #                           :translate_items => false,
-  #                           :minimizable => true
+  #                           :minimizable => true,
+  #                           :and_or => 'and'
   #                         }
   #                       ]
   #                      ]})
@@ -275,69 +276,85 @@ class Tr8n::Tokens::Base
   #                     minimizable
   #
   ##############################################################################
-  def token_array_value(token_value, options, language) 
-    objects = token_value.first
-  
-    objects = objects.collect do |obj|
-      if token_value[1].is_a?(Array)
-        evaluate_token_method_array(obj, [obj] + token_value[1], options, language)
-      else
-        evaluate_token_method_array(obj, token_value, options, language)
-      end
-    end
-
-    list_options = {
+  def default_list_options 
+    {
       :translate_items => false,
       :expandable => true,
       :minimizable => true,
       :to_sentence => true,
       :limit => 4,
-      :separator => ", "
+      :separator => ", ",
+      :description => nil,
+      :and_or => 'and'
     }
+  end
+
+  def token_array_value(token_value, options, language) 
+    objects = token_value.first
   
-    if token_value.second.is_a?(Array) and token_value.size == 3
+    list_options = default_list_options
+  
+    if token_value.size == 3 and token_value[1].is_a?(Array)
       list_options.merge!(token_value.last) 
     end
 
-    objects = objects.collect{|obj| obj.translate("List element", {}, options)} if list_options[:translate_items]
+    # get actual values for the objects
+    objects = objects.collect do |obj|
+      if token_value[1].is_a?(Array)
+        value = evaluate_token_method_array(obj, [obj] + token_value[1], options, language)
+      else
+        value = evaluate_token_method_array(obj, token_value, options, language)
+      end
+
+      if list_options[:translate_items]
+        value = language.translate(value, list_options[:description], {}, options)
+      end
+
+      value
+    end
 
     # if there is only one element in the array, use it and get out
-    return objects.first if objects.size == 1
+    return objects.first if objects.size == 1 
 
-    list_options[:expandable] = false if options[:skip_decorations]
-  
     return objects.join(list_options[:separator]) unless list_options[:to_sentence]
 
+    list_options[:expandable] = false if options[:skip_decorations]
+
+    joiner = language.translate(list_options[:and_or], nil, {}, options)
+
     if objects.size <= list_options[:limit]
-      return "#{objects[0..-2].join(list_options[:separator])} #{"and".translate("List elements joiner", {}, options)} #{objects.last}"
+      return "#{objects[0..-2].join(list_options[:separator])} #{joiner} #{objects.last}"
     end
 
     display_ary = objects[0..(list_options[:limit]-1)]
     remaining_ary = objects[list_options[:limit]..-1]
-    result = "#{display_ary.join(list_options[:separator])}"
   
-    unless list_options[:expandable]
-      result << " " << "and".translate("List elements joiner", {}, options) << " "
-      result << "{num} {_others}".translate("List elements joiner", 
-                {:num => remaining_ary.size, :_others => "other".pluralize_for(remaining_ary.size)}, options)
-      return result
-    end             
-           
-    uniq_id = Tr8n::TranslationKey.generate_key(original_label, objects.join(","))         
-    result << "<span id=\"tr8n_other_link_#{uniq_id}\">" << " " << "and".translate("List elements joiner", {}, options) << " "
-    result << "<a href='#' onClick=\"Tr8n.Effects.hide('tr8n_other_link_#{uniq_id}'); Tr8n.Effects.show('tr8n_other_elements_#{uniq_id}'); return false;\">"
-    result << "{num|| other}".translate("List elements joiner", {:num => remaining_ary.size}, options)
-    result << "</a></span>"
-    result << "<span id=\"tr8n_other_elements_#{uniq_id}\" style='display:none'>" << list_options[:separator]
-    result << "#{remaining_ary[0..-2].join(list_options[:separator])} #{"and".translate("List elements joiner", {}, options)} #{remaining_ary.last}"
+    others = language.translate("{num||other}", list_options[:description], {:num => remaining_ary.size}, options)
 
+    unless list_options[:expandable]
+      return "#{display_ary.join(list_options[:separator])} #{joiner} #{others}"
+    end             
+
+    # TODO: move to decorators
+    guid = Tr8n::Helper.guid     
+
+    html = ["#{display_ary.join(list_options[:separator])}"]
+    html << "<span id=\"tr8n_other_link_#{guid}\">"
+    html << " #{joiner} "
+    html << "<a href='#' onClick=\"Tr8n.Effects.hide('tr8n_other_link_#{guid}'); Tr8n.Effects.show('tr8n_other_elements_#{guid}'); return false;\">"
+    html << others
+    html << "</a></span>"
+
+    html << "<span id=\"tr8n_other_elements_#{guid}\" style='display:none'>" 
+    html << list_options[:separator]
+    html << "#{remaining_ary[0..-2].join(list_options[:separator])} #{joiner} #{others}"
     if list_options[:minimizable]
-      result << "<a href='#' style='font-size:smaller;white-space:nowrap' onClick=\"Tr8n.Effects.show('tr8n_other_link_#{uniq_id}'); Tr8n.Effects.hide('tr8n_other_elements_#{uniq_id}'); return false;\"> "
-      result << "&laquo; less".translate("List elements joiner", {}, options)    
-      result << "</a>"
+      html << "<a href='#' style='font-size:smaller;white-space:nowrap' onClick=\"Tr8n.Effects.show('tr8n_other_link_#{guid}'); Tr8n.Effects.hide('tr8n_other_elements_#{guid}'); return false;\"> "
+      html << language.translate("{laquo} less", nil, {}, options)    
+      html << "</a>"
     end
-  
-    result << "</span>"
+    html << "</span>"
+    html.join
   end
 
   # evaluate all possible methods for the token value and return sanitized result

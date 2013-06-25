@@ -101,43 +101,69 @@ describe Tr8n::Tokens::Base do
       token = tlabel.tokens.first
 
       users = []
-      1.upto(10) do |i|
+      1.upto(6) do |i|
         users << stub_object({:first_name => "First name #{i}", :last_name => "Last name #{i}", :gender => "Male"})
       end
     
-      # tr("Hello {user}", "", {:user => current_user}}
-      expect(token.token_value([users], {}, @english)).to eq("")
+      Tr8n.config.with_block_options(:dry => true) do 
+        expect(token.token_value([users, :first_name], {}, @english)).to match("2 others")
 
+        expect(token.token_value([users, [:first_name], {
+          :translate_items => false,
+          :expandable => false,
+          :minimizable => true,
+          :to_sentence => true,
+          :limit => 4,
+          :separator => ", ",
+          :description => nil,
+          :and_or => 'and'
+        }], {}, @english)).to eq("First name 1, First name 2, First name 3, First name 4 and 2 others")
 
-      # # tr("Hello {user}", "", {:user => [current_user]}}
-      # expect(token.token_value([object], {}, @english)).to eq(object.to_s)
+        expect(token.token_value([users, [:first_name], {
+          :translate_items => false,
+          :expandable => false,
+          :minimizable => true,
+          :to_sentence => false,
+          :limit => 4,
+          :separator => ", ",
+          :description => nil,
+          :and_or => 'and'
+        }], {}, @english)).to eq("First name 1, First name 2, First name 3, First name 4, First name 5, First name 6")
 
-      # # tr("Hello {user}", "", {:user => [current_user, current_user.name]}}
-      # expect(token.token_value([object, object.first_name], {}, @english)).to eq(object.first_name)
+        expect(token.token_value([users, [:first_name], {
+          :translate_items => false,
+          :expandable => false,
+          :minimizable => true,
+          :to_sentence => true,
+          :limit => 4,
+          :separator => ", ",
+          :description => nil,
+          :and_or => 'or'
+        }], {}, @english)).to eq("First name 1, First name 2, First name 3, First name 4 or 2 others")
 
-      # # tr("Hello {user}", "", {:user => [current_user, "{$0} {$1}", "param1"]}}
-      # expect(token.token_value([object, "{$0} {$1}", "param1"], {}, @english)).to eq(object.to_s + " param1")
-      # expect(token.token_value([object, "{$0} {$1} {$2}", "param1", "param2"], {}, @english)).to eq(object.to_s + " param1 param2")
+        expect(token.token_value([users, [:first_name], {
+          :translate_items => false,
+          :expandable => false,
+          :minimizable => true,
+          :to_sentence => true,
+          :limit => 2,
+          :separator => ", ",
+          :description => nil,
+          :and_or => 'or'
+        }], {}, @english)).to eq("First name 1, First name 2 or 4 others")
 
-      # # tr("Hello {user}", "", {:user => [current_user, :name]}}
-      # expect(token.token_value([object, :first_name], {}, @english)).to eq(object.first_name)
+        expect(token.token_value([users, [:first_name], {
+          :translate_items => false,
+          :expandable => false,
+          :minimizable => true,
+          :to_sentence => true,
+          :limit => 2,
+          :separator => " & ",
+          :description => nil,
+          :and_or => 'or'
+        }], {}, @english)).to eq("First name 1 & First name 2 or 4 others")
 
-      # # tr("Hello {user}", "", {:user => [current_user, :method_name, "param1"]}}
-      # object.stub(:last_name_with_prefix) {|prefix| "#{prefix} #{object.last_name}"}
-      # expect(token.token_value([object, :last_name_with_prefix, 'Mr.'], {}, @english)).to eq("Mr. Anderson")
-
-      # # tr("Hello {user}", "", {:user => [current_user, lambda{|user| user.name}]}}
-      # expect(token.token_value([object, lambda{|user| user.to_s}], {}, @english)).to eq(object.to_s)
-
-      # # tr("Hello {user}", "", {:user => [current_user, lambda{|user, param1| user.name}, "param1"]}}
-      # expect(token.token_value([object, lambda{|user, param1| user.to_s + " " + param1}, "extra_param1"], {}, @english)).to eq(object.to_s + " extra_param1")
-
-      # # tr("Hello {user}", "", {:user => {:object => current_user, :value => current_user.name}]}}
-      # expect(token.token_value({:object => object, :value => object.to_s}, {}, @english)).to eq(object.to_s)
-
-      # # tr("Hello {user}", "", {:user => {:object => current_user, :attribute => :first_name}]}}
-      # expect(token.token_value({:object => object, :attribute => :first_name}, {}, @english)).to eq(object.first_name)
-      # expect(token.token_value({:object => {:first_name => "Michael"}, :attribute => :first_name}, {}, @english)).to eq("Michael")
+      end
     end    
   end
 
