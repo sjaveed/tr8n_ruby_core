@@ -41,7 +41,7 @@ class Tr8n::Rules::Gender < Tr8n::Rules::Base
   end
 
   def self.gender_object_value_for(type)
-    Tr8n.config.rules_engine[:gender_rule][:method_values][type]
+    Tr8n.config.rules_engine[:gender][:method_values][type]
   end
 
   def gender_object_value_for(type)

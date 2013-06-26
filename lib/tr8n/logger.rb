@@ -22,14 +22,12 @@
 #++
 
 require 'logger'
+require 'FileUtils'
 
-class Tr8n::Logger < ::Logger
-
+module Tr8n
   def self.logger
-    return unless Tr8n.config.enable_logger?
     @logger ||= begin
-      logfile_path = Tr8n.config.log_path if Tr8n.config.log_path.first == '/' 
-      logfile_path = "#{Tr8n.config.root}/#{Tr8n.config.log_path}" unless logfile_path
+      logfile_path = File.expand_path(Tr8n.config.log_path)
       logfile_dir = logfile_path.split("/")[0..-2].join("/")
       FileUtils.mkdir_p(logfile_dir) unless File.exist?(logfile_dir)
       logfile = File.open(logfile_path, 'a')
@@ -37,24 +35,47 @@ class Tr8n::Logger < ::Logger
       Tr8n::Logger.new(logfile)
     end
   end
+end
+
+class Tr8n::Logger < ::Logger
 
   def format_message(severity, timestamp, progname, msg)
-    "#{timestamp.to_formatted_s(:db)}: #{msg}\n" 
+    "[#{timestamp.to_formatted_s(:db)}]: #{"  " * stack.size}#{msg}\n" 
   end 
 
-  def self.debug(msg)
-    logger && logger.debug(msg)
+  def add(severity, message = nil, progname = nil, &block)
+    return unless Tr8n.config.enable_logger?
+    super
   end
 
-  def self.info(msg)
-    logger && logger.info(msg)
+  def stack
+    @stack ||= []
   end
 
-  def self.error(msg)
-    logger && logger.error(msg)
+  def trace_api_call(path, params) 
+    debug("api: [/#{path}] #{params.inspect}")
+    stack.push(caller)
+    t0 = Time.now
+    if block_given?
+      ret = yield
+    end 
+    t1 = Time.now
+    stack.pop
+    debug("call took #{t1 - t0} seconds")
+    ret
   end
 
-  def self.fatal(msg)
-    logger && logger.fatal(msg)
+  def trace(message) 
+    debug(message)
+    stack.push(caller)
+    t0 = Time.now
+    if block_given?
+      ret = yield
+    end 
+    t1 = Time.now
+    stack.pop
+    debug("execution took #{t1 - t0} seconds")
+    ret
   end
+
 end 

@@ -56,28 +56,30 @@ class Tr8n::Application < Tr8n::Base
   end
 
   def reset!
-    @language_by_locale = nil
+    @language = nil
     @featured_languages = nil
     super
   end
 
-  def language_by_locale(locale)
-    @language_by_locale ||= begin
+  def language(locale = nil)
+    locale ||= default_locale
+
+    @language ||= begin
       langs = {}
       languages.each do |lang|      
         langs[lang.locale] = lang
       end
       langs
     end
-    return @language_by_locale[locale] if @language_by_locale[locale]
+    return @language[locale] if @language[locale]
 
     # for translator languages will continue to build application cache
-    @language_by_locale[locale] = get("language", {:locale => locale}, {:class => Tr8n::Language, :attributes => {:application => self}})    
-    @language_by_locale[locale]
+    @language[locale] = get("language", {:locale => locale}, {:class => Tr8n::Language, :attributes => {:application => self}})    
+    @language[locale]
   end
 
   def featured_languages
-    @featured_languages ||= get("application/featured_locales").collect{ |locale| language_by_locale(locale) }
+    @featured_languages ||= get("application/featured_locales").collect{ |locale| language(locale) }
   end
  
   def translators
@@ -121,6 +123,7 @@ class Tr8n::Application < Tr8n::Base
   end
 
   def source_by_key(key)
+    key = key.source if key.is_a?(Tr8n::Source)
     sources[key] ||= post("source/register", {:source => key}, {:class => Tr8n::Source, :attributes => {:application => self}})
   end
 
@@ -141,6 +144,16 @@ class Tr8n::Application < Tr8n::Base
   end
 
   def cache_translation_key(tkey)
+    cached_key = traslation_key_by_key(tkey.key)
+
+    if cached_key
+      # move translations from tkey to the cached key
+      tkey.translations.each do |locale, translations|
+        cached_key.set_language_translations(language(locale), translations)
+      end
+      return cached_key
+    end
+
     self.translation_keys[tkey.key] = tkey.set_application(self)
     tkey
   end
@@ -172,8 +185,9 @@ class Tr8n::Application < Tr8n::Base
     @default_locale ||= definition['default_locale'] || 'en-US'
   end
 
+  # deprecated
   def default_language
-    @default_language ||= language_by_locale(default_locale)
+    language(default_locale)
   end
 
   #######################################################################################################
@@ -201,29 +215,27 @@ class Tr8n::Application < Tr8n::Base
   end
 
   def self.api(path, params = {}, opts = {})
-    pp [:api, path, params]
+    Tr8n.logger.trace_api_call(path, params) do
+      conn = Faraday.new(:url => opts[:host]) do |faraday|
+        faraday.request(:url_encoded)               # form-encode POST params
+        # faraday.response :logger                  # log requests to STDOUT
+        faraday.adapter(Faraday.default_adapter)    # make requests with Net::HTTP
+      end
+      
+      if opts[:method] == :post
+        response = conn.post("#{API_PATH}#{path}", params)
+      else
+        response = conn.get("#{API_PATH}#{path}", params)
+      end
 
-    conn = Faraday.new(:url => opts[:host]) do |faraday|
-      faraday.request(:url_encoded)               # form-encode POST params
-      # faraday.response :logger                  # log requests to STDOUT
-      faraday.adapter(Faraday.default_adapter)    # make requests with Net::HTTP
+      data = JSON.parse(response.body)
+
+      unless data["error"].nil?
+        raise Tr8n::Exception.new("Error: #{data["error"]}")
+      end
+
+      process_response(data, opts)
     end
-    
-    if opts[:method] == :post
-      response = conn.post("#{API_PATH}#{path}", params)
-    else
-      response = conn.get("#{API_PATH}#{path}", params)
-    end
-
-    data = JSON.parse(response.body)
-
-    # pp data
-
-    unless data["error"].nil?
-      raise Tr8n::Exception.new("Error: #{data["error"]}")
-    end
-
-    process_response(data, opts)
   end
 
   def self.object_class(opts)
@@ -233,6 +245,7 @@ class Tr8n::Application < Tr8n::Base
 
   def self.process_response(data, opts)
     if data["results"]
+      Tr8n.logger.debug("recieved #{data["results"].size} result(s)")
       return data["results"] unless object_class(opts)
       objects = []
       data["results"].each do |data|
@@ -242,6 +255,7 @@ class Tr8n::Application < Tr8n::Base
     end
 
     return data unless object_class(opts)
+    Tr8n.logger.debug("constructing #{object_class(opts).name}")
     object_class(opts).new(data.merge(opts[:attributes] || {}))
   end
 end

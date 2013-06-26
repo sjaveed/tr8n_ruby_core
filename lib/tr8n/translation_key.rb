@@ -36,7 +36,7 @@ class Tr8n::TranslationKey < Tr8n::Base
     self.attributes[:translations] = {}
     if attrs['translations']
       attrs['translations'].each do |locale, translations|
-        language = application.language_by_locale(locale)
+        language = application.language(locale)
         self.attributes[:translations][locale] ||= []
         translations.each do |trn|
           trn = Tr8n::Translation.new(trn.merge(:translation_key => self, :locale => language.locale, :language => language))
@@ -59,7 +59,7 @@ class Tr8n::TranslationKey < Tr8n::Base
   end
   
   def language
-    @language ||= (locale ? application.language_by_locale(locale) : application.default_language)
+    @language ||= (locale ? application.language(locale) : application.default_language)
   end
 
   def fetch_translations_for_language(language, options = {})
@@ -67,14 +67,7 @@ class Tr8n::TranslationKey < Tr8n::Base
     return application.cache_translation_key(self) if options[:dry] or Tr8n.config.block_options[:dry]
 
     tkey = application.post("translation_key/translations", self.to_api_hash.merge(:locale => language.locale), {:class => Tr8n::TranslationKey, :attributes => {:application => application, :language => language}})
-    ckey = application.traslation_key_by_key(self.key)
-    if ckey 
-      ckey.set_language_translations(language, ckey.translations_for_language(language))
-    else
-      application.cache_translation_key(tkey)
-    end
-
-    application.traslation_key_by_key(self.key)
+    application.cache_translation_key(tkey)
   end
 
   # switches to a new application

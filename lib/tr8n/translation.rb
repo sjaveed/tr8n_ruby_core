@@ -29,7 +29,7 @@ class Tr8n::Translation < Tr8n::Base
   # switches to a new translation key
   def set_translation_key(tkey)
     self.translation_key = tkey
-    self.language = tkey.application.language_by_locale(locale)
+    self.language = tkey.application.language(locale)
   end
 
   def token_value_from_hash(token_values, token_name)

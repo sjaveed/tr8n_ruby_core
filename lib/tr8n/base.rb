@@ -104,8 +104,4 @@ class Tr8n::Base
     hash    
   end
 
-  def to_json
-    to_api_hash.to_json
-  end
-
 end

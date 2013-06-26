@@ -5,7 +5,7 @@ require 'helper'
 describe Tr8n::TokenizedLabel do
   before do
     @app = Tr8n::Application.new(load_json('application.json'))
-    @russian = @app.language_by_locale('ru')
+    @russian = @app.language('ru')
   end
 
   describe "#initialize" do

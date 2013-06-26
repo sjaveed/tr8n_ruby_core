@@ -6,7 +6,7 @@ describe Tr8n::TranslationKey do
   describe "#initialize" do
     before do
       @app = Tr8n::Application.new(load_json('application.json'))
-      @russian = @app.language_by_locale('ru')
+      @russian = @app.language('ru')
     end
 
     it "sets attributes" do

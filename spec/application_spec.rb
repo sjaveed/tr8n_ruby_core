@@ -38,8 +38,8 @@ describe Tr8n::Application do
   describe "#translation" do
     before do
       @app = Tr8n::Application.new(load_json('application.json'))
-      @english = @app.language_by_locale('en-US')
-      @russian = @app.language_by_locale('ru')
+      @english = @app.language('en-US')
+      @russian = @app.language('ru')
     end
 
     it "translates with fallback to English" do
@@ -125,12 +125,12 @@ describe Tr8n::Application do
     # end
 
     # it "returns cached language by locale" do
-    #   # russian = @app.language_by_locale("ru")
+    #   # russian = @app.language("ru")
     #   # pp russian.translate("{count||message,messages}", nil, :count => 3)
     # end
 
     # it "returns new language by locale" do
-    #   # french = @app.language_by_locale("fr")
+    #   # french = @app.language("fr")
     #   # pp french
     # end
 

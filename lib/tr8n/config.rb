@@ -52,6 +52,14 @@ class Tr8n::Config < Tr8n::Base
     not enabled?
   end
 
+  def enable_logger?
+    false
+  end
+
+  def log_path
+    "./log/tr8n.log"
+  end
+
   def enable_caching?
     false
   end

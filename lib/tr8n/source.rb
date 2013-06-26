@@ -56,9 +56,13 @@ class Tr8n::Source < Tr8n::Base
   end
 
   def fetch_translations_for_language(language, options = {})
+    Tr8n.logger.debug("calling fetch_translations_for_language: #{language.locale}")
+
     # for current translators who use inline mode - always fetch translations
     if Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
       return Tr8n.config.current_translation_keys if Tr8n.config.current_translation_keys
+
+      Tr8n.logger.debug("fetching translations for current translator in inline mode")
       keys_with_translations = application.get("source/translations", {:source => source, :locale => language.locale}, {:class => Tr8n::TranslationKey, :attributes => {:application => application, :language => language}})
       fetched_keys = {}
       keys_with_translations.each do |tkey|
@@ -69,23 +73,23 @@ class Tr8n::Source < Tr8n::Base
     end
 
     # return keys if they have already been fetched recently
-    return translation_keys if translation_keys and not language_needs_refetch?(language)
+    if translation_keys and not language_needs_refetch?(language)
+      Tr8n.logger.debug("cache hit: using translations for [#{source}] in [#{language.locale}]")
+      return translation_keys 
+    end
 
     set_language_updated_at(language)
     keys_with_translations = application.get("source/translations", {:source => source, :locale => language.locale}, {:class => Tr8n::TranslationKey, :attributes => {:application => application, :language => language}})
 
-    self.attributes[:translation_keys] = {}
-    keys_with_translations.each do |tkey|
-      ckey = application.translation_keys[tkey.key]
-      if ckey # if key exists in global cache, update its translations
-        ckey.set_language_translations(language, tkey.translations_for_language(language))
-      else # otherwise, add the new key to the global cache
-        application.translation_keys[tkey.key] = tkey
-        ckey = tkey
+    Tr8n.logger.trace("caching keys") do 
+      self.attributes[:translation_keys] = {}
+      keys_with_translations.each do |tkey|
+        Tr8n.logger.debug(tkey.label)
+        self.attributes[:translation_keys][tkey.key] = application.cache_translation_key(tkey)
       end
-      self.attributes[:translation_keys][ckey.key] = ckey
     end
-    translation_keys
+
+    self.attributes[:translation_keys]
   end
 
   def translation_keys

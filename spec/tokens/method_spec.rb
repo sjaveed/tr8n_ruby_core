@@ -5,7 +5,7 @@ require 'helper'
 describe Tr8n::Tokens::Method do
   before do
     @app = Tr8n::Application.new(load_json('application.json'))
-    @english = @app.language_by_locale('ru')
+    @english = @app.language('ru')
     @tkey = Tr8n::TranslationKey.new({
       :label => "Hello {user.first_name}",
       :application => @app,

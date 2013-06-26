@@ -1,3 +1,58 @@
-= Tr8n Client SDK for Ruby on Rails
+= Tr8n Core Library For Ruby
 
-This project rocks and uses MIT-LICENSE.
+This library provides a set of Tr8n client side tools that can be used in any ruby based project.
+
+== Installation
+
+To install the gem, use:
+
+  gem install tr8n_core
+
+
+== Registration
+
+Work in progress...
+
+
+== Usage
+
+The library can be invoked from the IRB. To use tr8n client you must first require it, and instantiat the application with the key and secret you aquired during registration:
+
+  irb(main):001:0> require 'tr8n_core'
+  irb(main):002:0> app = Tr8n::Application.init(TR8N_SERVICE_HOST, APPLICATION_KEY, SECRET)
+  irb(main):003:0> russian = app.language('ru')
+
+
+Simplest example:
+
+  irb(main):004:0> russian.translate('Hello World')
+  => "Привет Мир"
+
+Using context:
+
+  irb(main):004:0> russian.translate('Invite', 'An invitation')
+  => "Приглашение"
+  irb(main):005:0> russian.translate('Invite', 'An action to invite')
+  => "Пригласить"
+
+Basic numeric rules with transform tokens:
+
+  irb(main):006:0> russian.translate('You have {count||message}.', nil, :count => 1)
+  => "У вас есть 1 сообщение."
+  irb(main):007:0> russian.translate('You have {count||message}.', nil, :count => 2)
+  => "У вас есть 2 сообщения."
+  irb(main):008:0> russian.translate('You have {count||message}.', nil, :count => 5)
+  => "У вас есть 5 сообщений."
+
+Basic gender rules with language cases:
+
+  irb(main):009:0> actor = {:gender => :female, :name => "Анна"}
+  irb(main):010:0> target = {:gender => :male, :name => "Михаил"}
+  irb(main):011:0> russian.translate('{actor} sent {target::dat} a gift.', nil, :actor => {:object => actor, :attribute => :name}, :target => {:object => target, :attribute => :name})
+  => "Анна послала Михаилу подарок."
+
+== Tr8n
+
+To read more about TML (Translation Markup Language) syntax that Tr8n uses, please visit github.com/tr8n/tr8n 
+
+If you are planning to use Tr8n in Rails application, you can use the tr8n_rails_client_sdk gem instead.
