@@ -27,9 +27,8 @@ class Tr8n::Decorators::Html < Tr8n::Decorators::Base
   def decorate
     return label if options[:skip_decorations]
     return label if translation_key.language == language
-    # return label unless Tr8n.config.current_translator
-    # return label unless Tr8n.config.current_translator.inline?
-    # return label if translation_key.locked? and not Tr8n.config.current_translator.manager?
+    return label unless Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
+    return label if translation_key.locked? and not Tr8n.config.current_translator.manager?
 
     if translation_key.id.nil?
       html = "<tr8n style='border-bottom: 2px dotted #ff0000;'>"

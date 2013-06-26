@@ -101,6 +101,10 @@ class Tr8n::Tokens::Base
     true
   end
 
+  def supports_rules?
+    true
+  end
+
   def has_case_key?
     not case_key.nil?
   end

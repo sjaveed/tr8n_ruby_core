@@ -94,7 +94,7 @@ class Tr8n::TranslationKey < Tr8n::Base
     translations.each do |t|
       t.set_translation_key(self)
     end
-    self.translations[t.locale] = translations
+    self.translations[language.locale] = translations
   end
 
   def has_translations_for_language?(language)

@@ -25,9 +25,11 @@ require 'json'
 
 module Tr8n
   def self.config
-    @config ||= begin
-      Tr8n::Config.new
-    end
+    @config ||= Tr8n::Config.new
+  end
+  # config class can be set
+  def self.config=(config)
+    @config = config
   end
 end
 
@@ -35,7 +37,7 @@ end
 # The class can be extended with a different implementation, as long as the interface is supported
 class Tr8n::Config < Tr8n::Base
   attributes :application, :default_locale
-  thread_safe_attributes :current_user, :current_language, :current_translator, :current_source, :current_component
+  thread_safe_attributes :current_user, :current_language, :current_translator, :current_source, :current_component, :current_translation_keys
   thread_safe_attributes :block_options  
 
   def root

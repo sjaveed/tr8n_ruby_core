@@ -50,10 +50,11 @@ end
   if f.index('.rb')
     file = File.expand_path(File.join(File.dirname(__FILE__), f))
     require(file)
-  else
-    Dir[File.expand_path("#{File.dirname(__FILE__)}/#{f}/*.rb")].sort.each do |file|
-      require(file)
-    end
+    next
+  end
+
+  Dir[File.expand_path("#{File.dirname(__FILE__)}/#{f}/*.rb")].sort.each do |file|
+    require(file)
   end
 end
 

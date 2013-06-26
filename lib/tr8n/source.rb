@@ -26,7 +26,7 @@ class Tr8n::Source < Tr8n::Base
   attributes  :source, :url, :name, :description
   has_many    :translation_keys
 
-  def self.normalize_source(url)
+  def self.normalize(url)
     return nil if url.blank?
     uri = URI.parse(url)
     path = uri.path
@@ -58,11 +58,13 @@ class Tr8n::Source < Tr8n::Base
   def fetch_translations_for_language(language, options = {})
     # for current translators who use inline mode - always fetch translations
     if Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
+      return Tr8n.config.current_translation_keys if Tr8n.config.current_translation_keys
       keys_with_translations = application.get("source/translations", {:source => source, :locale => language.locale}, {:class => Tr8n::TranslationKey, :attributes => {:application => application, :language => language}})
       fetched_keys = {}
       keys_with_translations.each do |tkey|
         fetched_keys[tkey.key] = tkey
       end
+      Tr8n.config.current_translation_keys = fetched_keys
       return fetched_keys
     end
 

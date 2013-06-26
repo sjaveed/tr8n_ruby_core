@@ -49,6 +49,18 @@ class Tr8n::Tokens::Decoration < Tr8n::Tokens::Base
     nil
   end
   
+  def supports_cases?
+    false
+  end
+
+  def supports_rules?
+    false
+  end
+
+  def types
+    nil
+  end
+
   def value
     @value ||= begin
       parts = full_name.gsub(/[\]]/, '').split(':')
@@ -106,7 +118,7 @@ class Tr8n::Tokens::Decoration < Tr8n::Tokens::Base
       if method.is_a?(Proc)
         substitution_value = method.call(value)
       elsif method.is_a?(Array) or method.is_a?(Hash)
-        substitution_value = handle_default_decorations(name, value, values)
+        substitution_value = handle_default_decorations(translation_key, name, value, values)
       elsif method.is_a?(String)
         substitution_value = method.to_s.gsub("{$0}", value)
       else

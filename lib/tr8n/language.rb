@@ -96,7 +96,7 @@ class Tr8n::Language < Tr8n::Base
     raise Tr8n::Exception.new("The label #{label} is being translated twice") if label.tr8n_translated?
 
     unless Tr8n.config.enabled?
-      return Tr8n::TranslationKey.substitute_tokens(label, tokens, options, self).tr8n_translated
+      return Tr8n::TranslationKey.substitute_tokens(self, label, tokens, options).tr8n_translated
     end
 
     # create a temporary key
