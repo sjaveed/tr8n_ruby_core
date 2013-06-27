@@ -11,7 +11,7 @@ describe Tr8n::Application do
 
   describe "#initialize" do
     before do
-      @app = Tr8n::Application.new(load_json('application.json'))
+      @app = init_application
     end
 
     it "loads application attributes" do
@@ -28,7 +28,7 @@ describe Tr8n::Application do
     it "loads application language" do
       expect(@app.languages.size).to eq(2)
 
-      russian = @app.languages.first
+      russian = @app.language('ru')
       expect(russian.locale).to eq('ru')
       expect(russian.context_rules.keys.size).to eq(5)
       expect(russian.context_rules.keys).to eq(["date", "gender_list", "gender", "number", "value"])
@@ -37,7 +37,7 @@ describe Tr8n::Application do
 
   describe "#translation" do
     before do
-      @app = Tr8n::Application.new(load_json('application.json'))
+      @app = init_application
       @english = @app.language('en-US')
       @russian = @app.language('ru')
     end
@@ -51,7 +51,7 @@ describe Tr8n::Application do
     end
 
     it "translates basic phrases to Russian" do
-      load_translation_keys_from_file(@app, 'translations/russian/basic.json')
+      load_translation_keys_from_file(@app, 'translations/ru/basic.json')
       Tr8n.config.with_block_options(:dry => true) do 
         expect(@russian.translate("Hello World")).to eq("Привет Мир")
         expect(@russian.translate("Hello World", "Wrong context")).to eq("Hello World")
@@ -62,7 +62,7 @@ describe Tr8n::Application do
     end
 
     it "translates basic phrases with data tokens to Russian" do
-      load_translation_keys_from_file(@app, 'translations/russian/basic.json')
+      load_translation_keys_from_file(@app, 'translations/ru/basic.json')
       Tr8n.config.with_block_options(:dry => true) do 
         expect(@russian.translate("Hello {user}", nil, :user => "Михаил")).to eq("Привет Михаил")
       end
@@ -82,7 +82,7 @@ describe Tr8n::Application do
     end
 
     it "uses default decoration tokens" do
-      load_translation_keys_from_file(@app, 'translations/russian/basic.json')
+      load_translation_keys_from_file(@app, 'translations/ru/basic.json')
       Tr8n.config.with_block_options(:dry => true) do 
         expect(@english.translate("Hello [i: World]")).to eq("Hello <i>World</i>")
         expect(@russian.translate("Hello [i: World]")).to eq("Привет <i>Мир</i>")
@@ -90,7 +90,7 @@ describe Tr8n::Application do
     end
 
     it "uses mixed tokens" do
-      load_translation_keys_from_file(@app, 'translations/russian/basic.json')
+      load_translation_keys_from_file(@app, 'translations/ru/basic.json')
       Tr8n.config.with_block_options(:dry => true) do 
         expect(@english.translate("Hello [i: {user}]", nil, :user => "Michael")).to eq("Hello <i>Michael</i>")
         expect(@russian.translate("Hello [i: {user}]", nil, :user => "Michael")).to eq("Привет <i>Michael</i>")
@@ -98,7 +98,7 @@ describe Tr8n::Application do
     end
 
     it "uses method tokens" do
-      load_translation_keys_from_file(@app, 'translations/russian/basic.json')
+      load_translation_keys_from_file(@app, 'translations/ru/basic.json')
       Tr8n.config.with_block_options(:dry => true) do 
         expect(@russian.translate("Hello {user.first_name} [i: {user.last_name}]", nil, 
           :user => stub_object({:first_name => "Tom", :last_name => "Anderson"}))).to eq("Привет Tom <i>Anderson</i>")
@@ -106,7 +106,7 @@ describe Tr8n::Application do
     end
 
     it "translates phrases with numeric rules to Russian" do
-      load_translation_keys_from_file(@app, 'translations/russian/counters.json')
+      load_translation_keys_from_file(@app, 'translations/ru/counters.json')
       trn = @russian.translate("{count||message}", nil, {:count => 1})
       expect(trn).to eq("1 сообщение")
       trn = @russian.translate("{count||message}", nil, {:count => 2})
@@ -115,6 +115,50 @@ describe Tr8n::Application do
       expect(trn).to eq("5 сообщений")
       trn = @russian.translate("{count||message}", nil, {:count => 15})
       expect(trn).to eq("15 сообщений")
+    end
+
+    it "translates phrases with gender rules to Russian" do
+      load_translation_keys_from_file(@app, 'translations/ru/genders.json')
+      actor = {'gender' => 'female', 'name' => 'Таня'}
+      target = {'gender' => 'male', 'name' => 'Михаил'}
+
+      Tr8n.config.with_block_options(:dry => true) do 
+        expect(@russian.translate(
+                        '{actor} sent {target} a gift.', nil, 
+                        :actor => {:object => actor, :attribute => 'name'}, 
+                        :target => {:object => target, :attribute => 'name'})
+        ).to eq("Таня послала подарок Михаилу.")
+
+        expect(@russian.translate(
+                        '{actor} sent {target} a gift.', nil, 
+                        :actor => {:object => target, :attribute => 'name'}, 
+                        :target => {:object => actor, :attribute => 'name'})
+        ).to eq("Михаил послал подарок Тане.")
+
+        expect(@russian.translate(
+                        '{actor} loves {target}.', nil, 
+                        :actor => {:object => actor, :attribute => 'name'}, 
+                        :target => {:object => target, :attribute => 'name'})
+        ).to eq("Таня любит Михаила.")
+
+        expect(@russian.translate(
+                        '{actor} saw {target} {count||day} ago.', nil, 
+                        :actor => {:object => actor, :attribute => 'name'}, 
+                        :target => {:object => target, :attribute => 'name'},
+                        :count => 2)
+        ).to eq("Таня видела Михаила 2 дня назад.")
+
+        expect(@russian.translate(
+                        '{actor} saw {target} {count||day} ago.', nil, 
+                        :actor => {:object => target, :attribute => 'name'}, 
+                        :target => {:object => actor, :attribute => 'name'},
+                        :count => 2)
+        ).to eq("Михаил видел Таню 2 дня назад.")
+
+      end
+
+      # trn = @russian.translate("{count||message}", nil, {:count => 1})
+      # expect(trn).to eq("1 сообщение")
     end
 
   end  

@@ -177,22 +177,6 @@ class Tr8n::Tokens::Base
     @transformable_language_rule_classes ||= language_rule_classes.select{|klass| klass.transformable?}
   end
 
-  def sanitize_token_value(object, value, options, language)
-    value = "#{value.to_s}" unless value.is_a?(String)
-  
-    unless options[:skip_html_escaping] || Tr8n.config.block_options[:skip_html_escaping]
-      if options[:sanitize_values] and not value.html_safe?
-        value = ERB::Util.html_escape(value)
-      end
-    end
-
-    if has_case_key?
-      value = apply_case(object, value, options, language)
-    end
-  
-    value
-  end
-
   def decoration?
     false
   end
@@ -380,6 +364,7 @@ class Tr8n::Tokens::Base
     end
     
     if object.is_a?(Hash) 
+
       # if object is a hash, it must be of a form: {:object => {}, :value => "", :attribute => ""}
       # either value can be passed, or the attribute. attribute will be used first
       if object[:object].nil?
@@ -400,7 +385,7 @@ class Tr8n::Tokens::Base
         return raise Tr8n::Exception.new("Hash object is missing a value or attribute key for a token: #{full_name}")
       end
 
-      object = value
+      return sanitize_token_value(object[:object], value, options, language)    
     end
 
     # simple token
@@ -423,10 +408,26 @@ class Tr8n::Tokens::Base
   #
   ##############################################################################
   def apply_case(object, value, options, language)
-    return value unless Tr8n.config.application.enable_language_cases?
-    lcase = language.case_for(case_key)
+    return value unless language.application.enable_language_cases?
+    lcase = language.language_case_by_key(case_key)
     return value unless lcase
     lcase.apply(object, value, options)
+  end
+
+  def sanitize_token_value(object, value, options, language)
+    value = "#{value.to_s}" unless value.is_a?(String)
+  
+    unless options[:skip_html_escaping] || Tr8n.config.block_options[:skip_html_escaping]
+      if options[:sanitize_values] and not value.html_safe?
+        value = ERB::Util.html_escape(value)
+      end
+    end
+
+    if has_case_key?
+      value = apply_case(object, value, options, language)
+    end
+  
+    value
   end
 
   def substitute(translation_key, language, label, values, options)

@@ -73,8 +73,8 @@
       }
     }
   },
-  "language_cases": [
-    {
+  "language_cases": {
+    "nom": {
       "keyword": "nom",
       "latin_name": "Nominative",
       "native_name": "Nominative",
@@ -84,7 +84,7 @@
         
       ]
     },
-    {
+    "obj": {
       "keyword": "obj",
       "latin_name": "Objective",
       "native_name": "Objective",
@@ -94,7 +94,7 @@
         
       ]
     },
-    {
+    "ord": {
       "keyword": "ord",
       "latin_name": "Ordinal",
       "native_name": "Ordinal",
@@ -144,7 +144,7 @@
         }
       ]
     },
-    {
+    "ordinal": {
       "keyword": "ordinal",
       "latin_name": "Ordinal",
       "native_name": "Ordinal",
@@ -218,7 +218,7 @@
         }
       ]
     },
-    {
+    "pos": {
       "keyword": "pos",
       "latin_name": "Possessive",
       "native_name": "Possessive",
@@ -243,7 +243,7 @@
         }
       ]
     },
-    {
+    "times": {
       "keyword": "times",
       "latin_name": "Iteration",
       "native_name": "Iteration",
@@ -276,5 +276,5 @@
         }
       ]
     }
-  ]
-}
+  }
+}  

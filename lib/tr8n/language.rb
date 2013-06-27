@@ -42,7 +42,10 @@ class Tr8n::Language < Tr8n::Base
     end
 
     if attrs['language_cases']
-      self.attributes[:language_cases] = attrs['language_cases'].collect{ |lcase| Tr8n::LanguageCase.new(lcase.merge(:language => self)) }
+      self.attributes[:language_cases] = {}
+      attrs['language_cases'].each do |key, lcase|
+        self.attributes[:language_cases][key] = Tr8n::LanguageCase.new(lcase.merge(:language => self))
+      end
     end
   end
 
@@ -56,28 +59,18 @@ class Tr8n::Language < Tr8n::Base
     self.context_rules[type.to_s][key.to_s]
   end
 
-  def case_keyword_maps
-    @case_keyword_maps ||= begin
-      hash = {} 
-      language_cases.each do |lcase| 
-        hash[lcase.keyword] = lcase
-      end
-      hash
-    end
-  end
-
   def default?
     application.default_locale == locale
   end
 
-  def case_for(case_keyword)
-    case_keyword_maps[case_keyword]
+  def language_cases
+    super || {}
   end
-  
-  def valid_case?(case_keyword)
-    case_for(case_keyword) != nil
+
+  def language_case_by_key(key)
+    language_cases[key.to_s]
   end
-  
+    
   def full_name
     return english_name if english_name == native_name
     "#{english_name} - #{native_name}"

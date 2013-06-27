@@ -29,12 +29,12 @@ class Tr8n::LanguageCaseRule < Tr8n::Base
     value = value.to_s
 
     if ["male", "female", "unknown", "neutral"].include?(self.gender)
-      object_gender = Tr8n::GenderRule.gender_token_value(object)
+      object_gender = Tr8n::Rules::Gender.token_value(object)
       return false if self.gender == "male"    and object_gender != Tr8n::Rules::Gender.gender_object_value_for("male")
       return false if self.gender == "female"  and object_gender != Tr8n::Rules::Gender.gender_object_value_for("female")
       return false if self.gender == "unknown" and object_gender != Tr8n::Rules::Gender.gender_object_value_for("unknown")
     end    
-  
+
     result1 = evaluate_part(value, 1)
     if self.multipart?
       result2 = evaluate_part(value, 2)
@@ -46,9 +46,9 @@ class Tr8n::LanguageCaseRule < Tr8n::Base
   end
   
   def evaluate_part(token_value, index)
-    values = sanitize_values(self.attributes["value#{index}"])
+    values = sanitize_values(self.attributes["value#{index}".to_sym])
 
-    case self.attributes["part#{index}"]
+    case self.attributes["part#{index}".to_sym]
       when "starts_with" 
         values.each do |value|
           return true if token_value.to_s =~ /^#{value.to_s}/  

@@ -22,7 +22,6 @@
 #++
 
 require 'logger'
-require 'FileUtils'
 
 module Tr8n
   def self.logger

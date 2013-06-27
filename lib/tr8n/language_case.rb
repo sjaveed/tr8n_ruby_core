@@ -57,15 +57,17 @@ class Tr8n::LanguageCase < Tr8n::Base
     
     transformed_words = []
     words.each do |word|
-      lcvm = Tr8n::LanguageCaseValueMap.by_language_and_keyword(language, word)
+
+      # TODO: implement language case exceptions
+      # lcvm = Tr8n::LanguageCaseValueMap.by_language_and_keyword(language, word)
       
-      if lcvm
-        map_case_value = lcvm.value_for(object, keyword)
-        case_value = map_case_value.blank? ? word : map_case_value
-      else
-        case_rule = evaluate_rules(object, word)
-        case_value = case_rule ? case_rule.apply(word) : word 
-      end
+      # if lcvm
+      #   map_case_value = lcvm.value_for(object, keyword)
+      #   case_value = map_case_value.blank? ? word : map_case_value
+      # else
+      case_rule = evaluate_rules(object, word)
+      case_value = case_rule ? case_rule.apply(word) : word 
+      # end
 
       transformed_words << decorate_language_case(word, case_value || word, case_rule, options)
     end
@@ -93,9 +95,7 @@ class Tr8n::LanguageCase < Tr8n::Base
   def decorate_language_case(case_map_key, case_value, case_rule, options = {})
     return case_value if options[:skip_decorations]
     return case_value if language.default?
-    return case_value if Tr8n.config.current_user
-    return case_value unless Tr8n.config.current_translator
-    return case_value unless Tr8n.config.current_translator.inline?
+    return case_value unless Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
     
     "<span class='tr8n_language_case' case_id='#{id}' rule_id='#{case_rule ? case_rule.id : ''}' case_key='#{case_map_key.gsub("'", "\'")}'>#{case_value}</span>"
   end

@@ -49,7 +49,7 @@ Basic gender rules with language cases:
   irb(main):009:0> actor = {:gender => :female, :name => "Анна"}
   irb(main):010:0> target = {:gender => :male, :name => "Михаил"}
   irb(main):011:0> russian.translate('{actor} sent {target::dat} a gift.', nil, :actor => {:object => actor, :attribute => :name}, :target => {:object => target, :attribute => :name})
-  => "Анна послала Михаилу подарок."
+  => "Анна послала подарок Михаилу."
 
 == Tr8n
 

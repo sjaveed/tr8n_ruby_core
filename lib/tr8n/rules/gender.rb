@@ -31,9 +31,7 @@ class Tr8n::Rules::Gender < Tr8n::Rules::Base
 
   def self.token_value(token)
     if token.is_a?(Hash)
-      return nil unless token[:object]
-      return token[:object][method_name] if object.is_a?(Hash)
-      return token[:object].send(method_name)
+      return token[method_name] || token[method_name.to_sym]
     end
 
     return nil unless token and token.respond_to?(method_name)
@@ -41,7 +39,7 @@ class Tr8n::Rules::Gender < Tr8n::Rules::Base
   end
 
   def self.gender_object_value_for(type)
-    Tr8n.config.rules_engine[:gender][:method_values][type]
+    Tr8n.config.rules_engine[:gender][:method_values][type.to_sym]
   end
 
   def gender_object_value_for(type)

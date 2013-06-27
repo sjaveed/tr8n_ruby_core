@@ -28,6 +28,15 @@ def stub_object(attrs)
   user
 end
 
+def init_application(locales = [], path = 'application.json')
+  locales = ['en-US', 'ru'] if locales.size == 0 
+  app = Tr8n::Application.new(load_json(path))
+  locales.each do |locale|
+    app.add_language(Tr8n::Language.new(load_json("languages/#{locale}.json")))
+  end
+  app
+end
+
 RSpec.configure do |config|
   config.before do
     ARGV.replace []

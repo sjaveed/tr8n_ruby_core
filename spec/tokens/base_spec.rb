@@ -4,8 +4,8 @@ require 'helper'
 
 describe Tr8n::Tokens::Base do
   before do
-    @app = Tr8n::Application.new(load_json('application.json'))
-    @english = @app.language('ru')
+    @app = init_application
+    @english = @app.language('en-US')
     @tkey = Tr8n::TranslationKey.new({
       :label => "Hello {user}",
       :application => @app,

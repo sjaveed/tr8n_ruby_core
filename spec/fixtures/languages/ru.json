@@ -25,15 +25,12 @@
       }
     },
     "gender_list": {
-      "one": {
-        "part1": "contains",
-        "value1": "one_element",
-        "multipart": "false"
-      },
-      "many": {
+      "_empty_": {
         "part1": "contains",
         "value1": "at_least_two_elements",
-        "multipart": "false"
+        "multipart": "false",
+        "part2": "are",
+        "value2": "all_male"
       }
     },
     "gender": {
@@ -70,12 +67,21 @@
       "many": {
         "part1": "ends_in",
         "value1": "0, 5, 6, 7, 8, 9, 11, 12, 13, 14",
-        "multipart": "false"
+        "multipart": "false",
+        "operator": "and",
+        "part2": "is",
+        "value2": ""
+      }
+    },
+    "value": {
+      "_empty_": {
+        "operator": "does_not_start_with",
+        "value": "\u0430, \u0438, \u043e, \u0443, \u044b, \u044d, \u0410, \u0418, \u041e, \u0423, \u042d"
       }
     }
   },
-  "language_cases": [
-    {
+  "language_cases": {
+    "acc": {
       "keyword": "acc",
       "latin_name": "Accusativus",
       "native_name": "\u0412\u0438\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
@@ -85,17 +91,32 @@
         
       ]
     },
-    {
+    "dat": {
       "keyword": "dat",
       "latin_name": "Dativus",
       "native_name": "\u0414\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
       "description": "\u0420\u0430\u0434 - \u041a\u043e\u043c\u0443? \u0427\u0435\u043c\u0443?",
       "application": "words",
       "rules": [
-        
+        {
+          "multipart": false,
+          "gender": "male",
+          "part1": "ends_in",
+          "value1": "л",
+          "operation": "append",
+          "operation_value": "у"
+        },
+        {
+          "multipart": false,
+          "gender": "female",
+          "part1": "ends_in",
+          "value1": "ня",
+          "operation": "replace",
+          "operation_value": "не"
+        }        
       ]
     },
-    {
+    "gen": {
       "keyword": "gen",
       "latin_name": "Genitivus",
       "native_name": "\u0420\u043e\u0434\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
@@ -106,37 +127,21 @@
           "multipart": false,
           "gender": "male",
           "part1": "ends_in",
-          "value1": "\u0431, \u0432, \u0433, \u0434, \u0436, \u0437, \u043a, \u043b, \u043c, \u043d, \u043f, \u0440, \u0441, \u0442, \u0444, \u0445, \u0446, \u0447, \u0448, \u0449",
+          "value1": "л",
           "operation": "append",
-          "operation_value": "a"
-        },
-        {
-          "multipart": false,
-          "gender": "male",
-          "part1": "ends_in",
-          "value1": "\u0439",
-          "operation": "replace",
-          "operation_value": "\u044f"
+          "operation_value": "а"
         },
         {
           "multipart": false,
           "gender": "female",
           "part1": "ends_in",
-          "value1": "\u0430",
+          "value1": "ня",
           "operation": "replace",
-          "operation_value": "\u044b"
-        },
-        {
-          "multipart": false,
-          "gender": "female",
-          "part1": "ends_in",
-          "value1": "\u044f",
-          "operation": "replace",
-          "operation_value": "\u0438"
+          "operation_value": "ню"
         }
       ]
     },
-    {
+    "ins": {
       "keyword": "ins",
       "latin_name": "Instrumentalis",
       "native_name": "\u0422\u0432\u043e\u0440\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
@@ -146,7 +151,7 @@
         
       ]
     },
-    {
+    "nom": {
       "keyword": "nom",
       "latin_name": "Nominativus",
       "native_name": "\u0418\u043c\u0435\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
@@ -156,7 +161,7 @@
         
       ]
     },
-    {
+    "pos": {
       "keyword": "pos",
       "latin_name": "Possessive",
       "native_name": "\u041f\u0440\u0438\u0442\u044f\u0436\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
@@ -181,7 +186,7 @@
         }
       ]
     },
-    {
+    "pre": {
       "keyword": "pre",
       "latin_name": "Prepositivus",
       "native_name": "\u041f\u0440\u0435\u0434\u043b\u043e\u0436\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
@@ -191,5 +196,5 @@
         
       ]
     }
-  ]
+  }
 }

@@ -5,7 +5,7 @@ require 'helper'
 describe Tr8n::TranslationKey do
   describe "#initialize" do
     before do
-      @app = Tr8n::Application.new(load_json('application.json'))
+      @app = init_application
       @russian = @app.language('ru')
     end
 

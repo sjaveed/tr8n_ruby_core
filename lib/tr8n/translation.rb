@@ -37,7 +37,7 @@ class Tr8n::Translation < Tr8n::Base
     if token_value.is_a?(Array)
       token_value = token_value.first   
     elsif token_value.is_a?(Hash) 
-      token_value = token_value[:subject]
+      token_value = token_value[:object]
     end 
     token_value
   end

@@ -5,11 +5,11 @@ require 'helper'
 describe Tr8n::Language do
   describe "#initialize" do
     it "sets language attributes" do
-      russian = Tr8n::Language.new(load_json('languages/russian.json'))
+      russian = Tr8n::Language.new(load_json('languages/ru.json'))
       expect(russian.locale).to eq('ru')
       expect(russian.full_name).to eq("Russian - Русский")
 
-      expect(russian.context_rules.keys).to eq(["date", "gender_list", "gender", "number"])
+      expect(russian.context_rules.keys).to eq(["date", "gender_list", "gender", "number", "value"])
       expect(russian.context_rules['date'].keys).to eq(["past", "present", "future"])
       expect(russian.context_rules['date']['past'].class.name).to eq("Tr8n::Rules::Date")
 

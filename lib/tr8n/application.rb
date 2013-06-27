@@ -56,26 +56,36 @@ class Tr8n::Application < Tr8n::Base
   end
 
   def reset!
-    @language = nil
+    @languages_by_locale = nil
     @featured_languages = nil
     super
+  end
+
+  def add_language(lang)
+    @languages_by_locale ||= {}
+    return if @languages_by_locale[lang.locale]
+    
+    lang.application = self
+    self.attributes[:languages] ||= []
+    self.attributes[:languages] << lang
+    @languages_by_locale[lang.locale] = lang
   end
 
   def language(locale = nil)
     locale ||= default_locale
 
-    @language ||= begin
+    @languages_by_locale ||= begin
       langs = {}
       languages.each do |lang|      
         langs[lang.locale] = lang
       end
       langs
     end
-    return @language[locale] if @language[locale]
+    return @languages_by_locale[locale] if @languages_by_locale[locale]
 
     # for translator languages will continue to build application cache
-    @language[locale] = get("language", {:locale => locale}, {:class => Tr8n::Language, :attributes => {:application => self}})    
-    @language[locale]
+    @languages_by_locale[locale] = get("language", {:locale => locale}, {:class => Tr8n::Language, :attributes => {:application => self}})    
+    @languages_by_locale[locale]
   end
 
   def featured_languages

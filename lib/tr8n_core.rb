@@ -36,6 +36,8 @@ module Tr8n
   end
 end
 
+# require 'FileUtils'
+
 [
  "tr8n/base.rb",
  "tr8n",
