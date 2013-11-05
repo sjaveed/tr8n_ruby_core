@@ -23,17 +23,9 @@
 
 class Tr8n::Tokens::Base
   
-  def self.register_data_tokens(label)
+  def self.register_tokens(label, category = 'data')
     tokens = []
-    Tr8n.config.data_token_classes.each do |token_class|
-      tokens << token_class.parse(label)
-    end
-    tokens.flatten
-  end
-
-  def self.register_decoration_tokens(label)
-    tokens = []
-    Tr8n.config.decoration_token_classes.each do |token_class|
+    Tr8n.config.token_classes[category].each do |token_class|
       tokens << token_class.parse(label)
     end
     tokens.flatten
@@ -119,22 +111,9 @@ class Tr8n::Tokens::Base
     end
   end
 
-  def name_with_case
-    return name unless has_case_key?
-    "#{name}::#{case_key}"
-  end
-
-  def name_for_case(case_key)
-    "#{name}::#{case_key}"
-  end
-
-  def sanitized_name_for_case(case_key)
-    "{#{name_for_case(case_key)}}"
-  end
-
   ##############################################################################
-  # Token of a form {user:gender,value}  
-  def types
+  # Token of a form {user:gender:value}
+  def contexts
     return nil unless caseless_name.index(':')
     @types ||= begin 
       parts = caseless_name.split(':')
@@ -277,6 +256,14 @@ class Tr8n::Tokens::Base
     }
   end
 
+  def self.token_object(token_values, token_name)
+    return nil if token_values.nil?
+    token_object = token_values[token_name.to_sym]
+    return token_object.first if token_object.is_a?(Array)
+    return token_object[:object] || token_object['object'] if token_object.is_a?(Hash)
+    token_object
+  end
+
   def token_array_value(token_value, options, language) 
     objects = token_value.first
   
@@ -351,7 +338,7 @@ class Tr8n::Tokens::Base
     if object.is_a?(Array)
       # if you provided an array, it better have some values
       if object.empty?
-        return raise Tr8n::Exception.new("Invalid array value for a token: #{full_name}")
+          raise Tr8n::Exception.new("Invalid array value for a token: #{full_name}")
       end
 
       # if the first value of an array is an array handle it here

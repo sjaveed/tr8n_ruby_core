@@ -26,11 +26,11 @@ require 'json'
 class Tr8n::Helper
 
   def self.load_json(file_path)
-    JSON.parse(File.read("#{root}#{file_path}"))
+    JSON.parse(File.read(file_path))
   end
 
-  def self.load_yml(file_path, for_env = env)
-    YAML.load_file("#{root}#{file_path}")
+  def self.load_yml(file_path)
+    YAML.load_file(file_path)
   end
 
   def self.guid

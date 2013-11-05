@@ -47,7 +47,7 @@ class Tr8n::LanguageCase < Tr8n::Base
     
     # replace html tokens with temporary placeholders {$h1}
     html_tokens.each_with_index do |html_token, index|
-      value = value.gsub(html_token, "{$#{index}}")
+      value = value.gsub(html_token, "{$h#{index}}")
     end
 
     # replace words with temporary placeholders {$w1}
@@ -65,11 +65,11 @@ class Tr8n::LanguageCase < Tr8n::Base
       #   map_case_value = lcvm.value_for(object, keyword)
       #   case_value = map_case_value.blank? ? word : map_case_value
       # else
-      case_rule = evaluate_rules(object, word)
+      case_rule = match_rule(object, word)
       case_value = case_rule ? case_rule.apply(word) : word 
       # end
 
-      transformed_words << decorate_language_case(word, case_value || word, case_rule, options)
+      transformed_words << decorate(word, case_value, case_rule, options)
     end
     
     # replace back the temporary placeholders with the html tokens  
@@ -85,19 +85,19 @@ class Tr8n::LanguageCase < Tr8n::Base
     value
   end
 
-  def evaluate_rules(object, value)
+  def match_rule(object, value)
     rules.each do |rule|
       return rule if rule.evaluate(object, value)
     end
     nil
   end
 
-  def decorate_language_case(case_map_key, case_value, case_rule, options = {})
+  def decorate(word, case_value, case_rule, options = {})
     return case_value if options[:skip_decorations]
     return case_value if language.default?
     return case_value unless Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
     
-    "<span class='tr8n_language_case' case_id='#{id}' rule_id='#{case_rule ? case_rule.id : ''}' case_key='#{case_map_key.gsub("'", "\'")}'>#{case_value}</span>"
+    "<span class='tr8n_language_case' case_id='#{id}' rule_id='#{case_rule ? case_rule.id : ''}' case_key='#{word.gsub("'", "\'")}'>#{case_value}</span>"
   end
 
 end

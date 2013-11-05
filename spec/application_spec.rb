@@ -118,7 +118,37 @@ describe Tr8n::Application do
     end
 
     it "translates phrases with gender rules to Russian" do
-      load_translation_keys_from_file(@app, 'translations/ru/genders.json')
+      #load_translation_key_from_hash(@app, {
+      #    "label" => "{actor} sent {target} a gift.",
+      #    "translations" => {
+      #    "ru" => [
+      #        {
+      #          "label"=> "{actor} послал подарок {target::dat}.",
+      #          "locale"=> "ru",
+      #          "context"=> {
+      #            "actor"=> [{ "type"=> "gender", "key"=> "male"}]
+      #          }
+      #        },
+      #        {
+      #          "label"=> "{actor} послала подарок {target::dat}.",
+      #          "locale"=> "ru",
+      #          "context"=> {
+      #            "actor"=> [{ "type"=> "gender", "key"=> "female"}]
+      #          },
+      #        },
+      #        {
+      #          "label"=> "{actor} послал/а подарок {target::dat}.",
+      #          "locale"=> "ru",
+      #          "context"=> {
+      #            "actor"=> [{ "type"=> "gender", "key"=> "unknown"}]
+      #           },
+      #        }
+      #      ]
+      #    }
+      #});
+
+      load_translation_keys_from_file(@app, "translations/ru/genders.json")
+
       actor = {'gender' => 'female', 'name' => 'Таня'}
       target = {'gender' => 'male', 'name' => 'Михаил'}
 

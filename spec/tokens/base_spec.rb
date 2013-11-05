@@ -29,9 +29,6 @@ describe Tr8n::Tokens::Base do
       expect(@token.supports_cases?).to be_true
       expect(@token.has_case_key?).to be_false
       expect(@token.caseless_name).to eq("user")
-      expect(@token.name_with_case).to eq("user")
-      expect(@token.name_for_case(:nom)).to eq("user::nom")
-      expect(@token.sanitized_name_for_case(:nom)).to eq("{user::nom}")
 
       expect(@token.types).to be_nil
       expect(@token.has_types?).to be_false

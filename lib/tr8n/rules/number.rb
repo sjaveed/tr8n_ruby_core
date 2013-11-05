@@ -32,39 +32,22 @@ class Tr8n::Rules::Number < Tr8n::Rules::Base
     :number
   end
 
-  def self.token_value(token)
-    if token.is_a?(Hash)
-      return nil unless token[:object]
-      return token[:object][method_name] if object.is_a?(Hash)
-      return token[:object].send(method_name)
-    end
-
-    super
-  end
-
   # FORM: [singular(, plural)]
   # {count | message}
   # {count | person, people}
   # {count | one: person, other: people}
   # "У вас есть {count|| one: сообщение, few: сообщения, many: сообщений}"
-  def self.transform_params_to_options(params)
+  def self.default_transform_options(params, token)
     options = {}
-    if params[0].index(':')
-      params.each do |arg|
-        parts = arg.split(':')
-        options[parts.first.strip.to_sym] = parts.last.strip
-      end
-    else # default falback to {|| singular} or {|| singular, plural} - mostly for English support
-      if params.size == 1 # {|| singular}
-        options[:one] = params[0]
-        options[:many] = ActiveSupport::Inflector.pluralize(params[0])
-      elsif params.size == 2
-        options[:one] = params[0]
-        options[:many] = params[1]
-      else
-        raise Tr8n::Exception.new("Invalid number of parameters in the transform token #{token}")
-      end  
-    end
+    if params.size == 1 # {|| singular}
+      options[:one] = params[0]
+      options[:many] = ActiveSupport::Inflector.pluralize(params[0])
+    elsif params.size == 2
+      options[:one] = params[0]
+      options[:many] = params[1]
+    else
+      raise Tr8n::Exception.new("Invalid number of parameters in the transform token #{token}")
+    end  
     options
   end
 
@@ -74,13 +57,11 @@ class Tr8n::Rules::Number < Tr8n::Rules::Base
 
   def evaluate_rule_fragment(token_value, name, values)
     if name == :is
-      return true if values.include?(token_value)
-      return false
+      return values.include?(token_value)
     end
     
     if name == :is_not
-      return true unless values.include?(token_value)
-      return false
+      return !values.include?(token_value)
     end
 
     if name == :ends_in
@@ -123,9 +104,7 @@ class Tr8n::Rules::Number < Tr8n::Rules::Base
 
     result2 = evaluate_rule_fragment(value.to_s, part2.to_sym, sanitize_values(value2))
     return (result1 or result2) if operator == "or"
-    return (result1 and result2)
-    
-    false
+    (result1 and result2)
   end
     
 end

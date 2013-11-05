@@ -55,7 +55,7 @@
   "translations": {
     "ru": [
       {
-        "label": "{actor} видел {target::gen} {count} дней назад.",
+        "label": "{actor} видел {target::acc} {count} дней назад.",
         "locale": "ru",
         "context": {
           "actor": [
@@ -73,7 +73,7 @@
         }
       },
       {
-        "label": "{actor} видел {target::gen} {count} дня назад.",
+        "label": "{actor} видел {target::acc} {count} дня назад.",
         "locale": "ru",
         "context": {
           "actor": [
@@ -91,7 +91,7 @@
         }
       },      
       {
-        "label": "{actor} видел {target::gen} {count} день назад.",
+        "label": "{actor} видел {target::acc} {count} день назад.",
         "locale": "ru",
         "context": {
           "actor": [
@@ -109,7 +109,7 @@
         }
       },        
       {
-        "label": "{actor} видела {target::gen} {count} дней назад.",
+        "label": "{actor} видела {target::acc} {count} дней назад.",
         "locale": "ru",
         "context": {
           "actor": [
@@ -127,7 +127,7 @@
         }
       },
       {
-        "label": "{actor} видела {target::gen} {count} дня назад.",
+        "label": "{actor} видела {target::acc} {count} дня назад.",
         "locale": "ru",
         "context": {
           "actor": [
@@ -145,7 +145,7 @@
         }
       },      
       {
-        "label": "{actor} видела {target::gen} {count} день назад.",
+        "label": "{actor} видела {target::acc} {count} день назад.",
         "locale": "ru",
         "context": {
           "actor": [

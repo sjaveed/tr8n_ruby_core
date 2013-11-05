@@ -32,24 +32,25 @@ class Tr8n::Translation < Tr8n::Base
     self.language = tkey.application.language(locale)
   end
 
-  def token_value_from_hash(token_values, token_name)
-    token_value = token_values[token_name.to_sym]
-    if token_value.is_a?(Array)
-      token_value = token_value.first   
-    elsif token_value.is_a?(Hash) 
-      token_value = token_value[:object]
-    end 
-    token_value
-  end
+  #{
+  #    "count" => [{"type" => "number", "key" => "one"}],
+  #    "user" => ["type" => "gender", "key" => "male"]
+  #}
+
+  #{
+  #    "count" => [{"number":"one"}],
+  #    "user" => [{"gender":"male"}]
+  #}
 
   # checks if the translation is valid for the given tokens
   def matches_rules?(token_values)
-    return true if context.nil? or context.empty?   # doesn't have any rules
+    return true unless context   # doesn't have any rules
 
     context.each do |token_name, rules|
-      token_value = token_value_from_hash(token_values, token_name)
+      token_value = Tr8n::Tokens::Base.token_object(token_values, token_name)
       rules.each do |rule_def|
-        rule = language.context_rule_by_type_and_key(rule_def['type'], rule_def['key'])
+        rule = language.context_rule_by_type_and_key(rule_def.key, rule_def.value)
+        next unless rule
         return false unless rule and rule.evaluate(token_value)
       end
     end

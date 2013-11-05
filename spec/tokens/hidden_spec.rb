@@ -29,8 +29,7 @@ describe Tr8n::Tokens::Hidden do
       expect(token.supports_cases?).to be_false
       expect(token.has_case_key?).to be_false
       expect(token.caseless_name).to eq("_others")
-      expect(token.name_with_case).to eq("_others")
-
+      
       expect(token.types).to be_nil
       expect(token.has_types?).to be_false
       expect(token.associated_rule_types).to eq([:value])

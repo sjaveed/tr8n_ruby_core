@@ -31,9 +31,9 @@ class Tr8n::Decorators::Html < Tr8n::Decorators::Base
     return label if translation_key.locked? and not Tr8n.config.current_translator.manager?
 
     if translation_key.id.nil?
-      html = "<tr8n style='border-bottom: 2px dotted #ff0000;'>"
+      html = "<span style='border-bottom: 2px dotted #ff0000;'>"
       html << label
-      html << "</tr8n>"
+      html << "</span>"
       return html.html_safe
     end      
 
@@ -50,9 +50,9 @@ class Tr8n::Decorators::Html < Tr8n::Decorators::Base
     end  
 
     # TODO: switch to <tml:label> notation
-    html = "<tr8n class='#{classes.join(' ')}' translation_key_id='#{translation_key.id}'>"
+    html = "<span class='#{classes.join(' ')}' translation_key_id='#{translation_key.id}'>"
     html << label
-    html << "</tr8n>"
+    html << "</span>"
     html.html_safe
   end  
 

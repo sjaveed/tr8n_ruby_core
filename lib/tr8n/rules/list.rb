@@ -31,21 +31,14 @@ class Tr8n::Rules::List < Tr8n::Rules::Base
 
   # FORM: [one, many]
   # {actors|| likes, like} this story
-  def self.transform_params_to_options(params)
+  def self.default_transform_options(params, token)
     options = {}
-    if params[0].index(':')
-      params.each do |arg|
-        parts = arg.split(':')
-        options[parts.first.strip.to_sym] = parts.last.strip
-      end
-    else # default falback to {|| male, female} or {|| male, female, unknown} 
-      if params.size == 2 # doesn't matter
-        options[:one] = params[0]
-        options[:other] = params[1]
-      else
-        raise Tr8n::Exception.new("Invalid number of parameters in the transform token #{token}")
-      end  
-    end
+    if params.size == 2 # doesn't matter
+      options[:one] = params[0]
+      options[:other] = params[1]
+    else
+      raise Tr8n::Exception.new("Invalid number of parameters in the transform token #{token}")
+    end  
     options    
   end
   

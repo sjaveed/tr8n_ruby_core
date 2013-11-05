@@ -30,9 +30,8 @@ class Tr8n::Language < Tr8n::Base
   def initialize(attrs = {})
     super
 
+    self.attributes[:context_rules] = {}
     if attrs['context_rules']
-      self.attributes[:context_rules] = {}
-
       attrs['context_rules'].each do |rule_class, hash|
         self.attributes[:context_rules][rule_class] ||= {}
         hash.each do |keyword, rule|
@@ -41,8 +40,8 @@ class Tr8n::Language < Tr8n::Base
       end
     end
 
+    self.attributes[:language_cases] = {}
     if attrs['language_cases']
-      self.attributes[:language_cases] = {}
       attrs['language_cases'].each do |key, lcase|
         self.attributes[:language_cases][key] = Tr8n::LanguageCase.new(lcase.merge(:language => self))
       end
@@ -115,11 +114,6 @@ class Tr8n::Language < Tr8n::Base
     end
 
     ckey.translate(self, tokens.merge(:viewing_user => Tr8n.config.current_user), options).tr8n_translated
-  end
-  alias :tr :translate
-
-  def trl(label, desc = "", tokens = {}, options = {})
-    tr(label, desc, tokens, options.merge(:skip_decorations => true))
   end
 
 end

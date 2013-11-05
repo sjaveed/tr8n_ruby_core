@@ -29,11 +29,6 @@ class Tr8n::Rules::GenderList < Tr8n::Rules::Base
     :gender_list
   end
 
-  def self.token_value(token)
-    return nil unless token and token.respond_to?(method_name)
-    token.send(method_name)
-  end
-
   def self.male_female_occupants(arr)
     has_male = false  
     has_female = false
@@ -59,21 +54,14 @@ class Tr8n::Rules::GenderList < Tr8n::Rules::Base
   # FORM: [one element male, one element female, at least two elements]
   # or: [one element, at least two elements]
   # {actors:gender_list|| likes, like} this story
-  def self.transform_params_to_options(params)
+  def self.default_transform_options(params, token)
     options = {}
-    if params[0].index(':')
-      params.each do |arg|
-        parts = arg.split(':')
-        options[parts.first.strip.to_sym] = parts.last.strip
-      end
-    else # default falback to {|| male, female} or {|| male, female, unknown} 
-      if params.size == 2 # doesn't matter
-        options[:one] = params[0]
-        options[:other] = params[1]
-      else
-        raise Tr8n::Exception.new("Invalid number of parameters in the transform token #{token}")
-      end  
-    end
+    if params.size == 2 # doesn't matter
+      options[:one] = params[0]
+      options[:other] = params[1]
+    else
+      raise Tr8n::Exception.new("Invalid number of parameters in the transform token #{token}")
+    end  
     options    
   end
 

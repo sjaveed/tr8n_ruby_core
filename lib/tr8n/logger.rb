@@ -39,7 +39,7 @@ end
 class Tr8n::Logger < ::Logger
 
   def format_message(severity, timestamp, progname, msg)
-    "[#{timestamp.to_formatted_s(:db)}]: #{"  " * stack.size}#{msg}\n" 
+    "[#{timestamp.strftime("%D %T")}]: #{"  " * stack.size}#{msg}\n" 
   end 
 
   def add(severity, message = nil, progname = nil, &block)

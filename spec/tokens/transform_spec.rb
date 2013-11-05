@@ -29,9 +29,6 @@ describe Tr8n::Tokens::Transform do
       expect(token.supports_cases?).to be_true
       expect(token.has_case_key?).to be_false
       expect(token.caseless_name).to eq("count")
-      expect(token.name_with_case).to eq("count")
-      expect(token.name_for_case(:ord)).to eq("count::ord")
-      expect(token.sanitized_name_for_case(:ord)).to eq("{count::ord}")
 
       expect(token.types).to be_nil
       expect(token.has_types?).to be_false

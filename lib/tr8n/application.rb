@@ -30,7 +30,8 @@ class Tr8n::Application < Tr8n::Base
   has_many :languages, :translation_keys, :sources, :components
 
   def self.init(host, key, secret, options = {})
-    api("application", {:client_id => key, :definition => true}, {:host => host, :class => Tr8n::Application, :attributes => {
+    options[:definition] = true if options[:definition].nil?
+    api("application", {:client_id => key, :definition => options[:definition]}, {:host => host, :client_secret => secret, :class => Tr8n::Application, :attributes => {
       :host => host, 
       :key => key,
       :secret => secret
@@ -39,11 +40,17 @@ class Tr8n::Application < Tr8n::Base
 
   def initialize(attrs = {})
     super
+    unless attrs['definition']
+      self.attributes[:definition] = {}
+    end
     if attrs['languages']
       self.attributes[:languages] = attrs['languages'].collect{ |l| Tr8n::Language.new(l.merge(:application => self)) }
     end
-    unless attrs['definition']
-      self.attributes[:definition] = {}
+    if attrs['sources']
+      self.attributes[:sources] = attrs['sources'].collect{ |l| Tr8n::Source.new(l.merge(:application => self)) }
+    end
+    if attrs['components']
+      self.attributes[:components] = attrs['components'].collect{ |l| Tr8n::Component.new(l.merge(:application => self)) }
     end
   end
 
@@ -56,8 +63,10 @@ class Tr8n::Application < Tr8n::Base
   end
 
   def reset!
-    @languages_by_locale = nil
-    @featured_languages = nil
+    # @languages_by_locale = nil
+    # @sources_by_key = nil
+    # @components_by_key = nil
+    # @featured_languages = nil
     super
   end
 
@@ -86,6 +95,11 @@ class Tr8n::Application < Tr8n::Base
     # for translator languages will continue to build application cache
     @languages_by_locale[locale] = get("language", {:locale => locale}, {:class => Tr8n::Language, :attributes => {:application => self}})    
     @languages_by_locale[locale]
+  end
+
+  def languages(*locales)
+    return super if locales.size == 0
+    locales.collect{|locale| language(locale)}
   end
 
   def featured_languages
@@ -128,21 +142,28 @@ class Tr8n::Application < Tr8n::Base
     rules[type]
   end
 
-  def sources
-    self.attributes[:sources] ||= {}
-  end
-
   def source_by_key(key)
     key = key.source if key.is_a?(Tr8n::Source)
-    sources[key] ||= post("source/register", {:source => key}, {:class => Tr8n::Source, :attributes => {:application => self}})
-  end
-
-  def components
-     self.attributes[:components] ||= {}
+    @sources_by_key ||= begin
+      srcs = {}
+      sources.each do |src|      
+        srcs[src.source] = src
+      end
+      srcs
+    end
+    @sources_by_key[key] ||= post("source/register", {:source => key}, {:class => Tr8n::Source, :attributes => {:application => self}})
   end
 
   def component_by_key(key)
-    components[key] ||= post("component/register", {:component => key}, {:class => Tr8n::Component, :attributes => {:application => self}})
+    key = key.key if key.is_a?(Tr8n::Component)
+    @components_by_key ||= begin
+      cmps = {}
+      components.each do |cmp|      
+        cmps[cmp.key] = cmp
+      end
+      cmps
+    end
+    @components_by_key[key] ||= post("component/register", {:component => key}, {:class => Tr8n::Component, :attributes => {:application => self}})
   end
 
   def translation_keys

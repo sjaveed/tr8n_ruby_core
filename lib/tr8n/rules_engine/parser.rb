@@ -1,5 +1,5 @@
 #--
-# Copyright (c) 2010-2013 Michael Berkovich, tr8nhub.com
+# Copyright (c) 2013 Michael Berkovich, tr8nhub.com
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,43 +21,30 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module Tr8nCore
-
-end
-
 module Tr8n
-  module Tokens
-  end
+  module RulesEngine
 
-  module Rules
-  end
+    class Parser
+      attr_reader :tokens
+      def initialize(expression)
+        @tokens = expression.scan /[()]|\w+|@\w+|[\+\-\!\|\=>&<\*\/%]+|".*?"|'.*?'/
+      end
 
-  module Decorators
-  end
-end
+      def parse
+        token = @tokens.shift
+        return parse_list if (token) == '('
+        return token[1..-2] if token =~ /['"].*/
+        return token.to_i if token =~ /\d+/
+        token.to_s
+      end
 
-# require 'FileUtils'
+      def parse_list
+        list = []
+        list << parse until @tokens.first == ')'
+        @tokens.shift
+        list
+      end
+    end
 
-[
- "tr8n/base.rb",
- "tr8n",
- "tr8n/rules_engine",
- "tr8n/rules/base.rb",
- "tr8n/rules",
- "tr8n/tokens/base.rb",
- "tr8n/tokens",
- "tr8n/decorators/base.rb",
- "tr8n/decorators",
- "tr8n_core/ext",
-].each do |f|
-  if f.index('.rb')
-    file = File.expand_path(File.join(File.dirname(__FILE__), f))
-    require(file)
-    next
-  end
-
-  Dir[File.expand_path("#{File.dirname(__FILE__)}/#{f}/*.rb")].sort.each do |file|
-    require(file)
   end
 end
-

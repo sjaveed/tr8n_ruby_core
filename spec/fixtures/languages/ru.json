@@ -81,81 +81,169 @@
     }
   },
   "language_cases": {
-    "acc": {
-      "keyword": "acc",
-      "latin_name": "Accusativus",
-      "native_name": "\u0412\u0438\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
-      "description": "\u0412\u0438\u0436\u0443 - \u041a\u043e\u0433\u043e? \u0427\u0442\u043e?",
+    "nom": {
+      "keyword": "nom",
+      "latin_name": "Nominativus",
+      "native_name": "Именительный Падеж",
+      "description": "Есть - Кто? Что?",
       "application": "words",
       "rules": [
-        
       ]
-    },
-    "dat": {
-      "keyword": "dat",
-      "latin_name": "Dativus",
-      "native_name": "\u0414\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
-      "description": "\u0420\u0430\u0434 - \u041a\u043e\u043c\u0443? \u0427\u0435\u043c\u0443?",
+    },    
+    "gen": {
+      "keyword": "gen",
+      "latin_name": "Genitivus",
+      "native_name": "Родительный Падеж",
+      "description": "Нет - Кого? Чего?",
       "application": "words",
       "rules": [
         {
           "multipart": false,
-          "gender": "male",
+          "gender": "female",
           "part1": "ends_in",
-          "value1": "л",
-          "operation": "append",
-          "operation_value": "у"
+          "value1": "я,ь",
+          "operation": "replace",
+          "operation_value": "и"
         },
         {
           "multipart": false,
           "gender": "female",
           "part1": "ends_in",
-          "value1": "ня",
+          "value1": "ка",
           "operation": "replace",
-          "operation_value": "не"
-        }        
-      ]
-    },
-    "gen": {
-      "keyword": "gen",
-      "latin_name": "Genitivus",
-      "native_name": "\u0420\u043e\u0434\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
-      "description": "\u041d\u0435\u0442 - \u041a\u043e\u0433\u043e? \u0427\u0435\u0433\u043e?",
-      "application": "words",
-      "rules": [
+          "operation_value": "ки"
+        },
+        {
+          "multipart": false,
+          "gender": "either",
+          "part1": "ends_in",
+          "value1": "а",
+          "operation": "replace",
+          "operation_value": "ы"
+        },
         {
           "multipart": false,
           "gender": "male",
           "part1": "ends_in",
-          "value1": "л",
+          "value1": "л,м,р,н,с,в,д,б,т",
           "operation": "append",
           "operation_value": "а"
         },
         {
           "multipart": false,
+          "gender": "male",
+          "part1": "ends_in",
+          "value1": "й",
+          "operation": "replace",
+          "operation_value": "я"
+        },
+        {
+          "multipart": false,
+          "gender": "male",
+          "part1": "ends_in",
+          "value1": "ь",
+          "operation": "replace",
+          "operation_value": "я"
+        },
+        {
+          "multipart": false,
+          "gender": "male",
+          "part1": "ends_in",
+          "value1": "я",
+          "operation": "replace",
+          "operation_value": "и"
+        }
+      ]
+    },    
+    "dat": {
+      "keyword": "dat",
+      "latin_name": "Dativus",
+      "native_name": "Дательный Падеж",
+      "description": "Рад - Кому? Чему?",
+      "application": "words",
+      "rules": [
+        {
+          "multipart": false,
           "gender": "female",
           "part1": "ends_in",
-          "value1": "ня",
+          "value1": "а,я",
           "operation": "replace",
-          "operation_value": "ню"
+          "operation_value": "е"
+        },        
+        {
+          "multipart": false,
+          "gender": "male",
+          "part1": "ends_in",
+          "value1": "л,м,р,н,с,в,д,б,т",
+          "operation": "append",
+          "operation_value": "у"
+        },
+        {
+          "multipart": false,
+          "gender": "male",
+          "part1": "ends_in",
+          "value1": "й",
+          "operation": "replace",
+          "operation_value": "ю"
+        }
+      ]
+    },
+    "acc": {
+      "keyword": "acc",
+      "latin_name": "Accusativus",
+      "native_name": "Винительный Падеж",
+      "description": "Виню - Кого? Что?",
+      "application": "words",
+      "rules": [
+        {
+          "multipart": false,
+          "gender": "female",
+          "part1": "ends_in",
+          "value1": "я",
+          "operation": "replace",
+          "operation_value": "ю"
+        },
+        {
+          "multipart": false,
+          "gender": "female",
+          "part1": "ends_in",
+          "value1": "а",
+          "operation": "replace",
+          "operation_value": "у"
+        },
+        {
+          "multipart": false,
+          "gender": "male",
+          "part1": "ends_in",
+          "value1": "л,м,р,н,с,в,д,б,т",
+          "operation": "append",
+          "operation_value": "а"
+        },
+        {
+          "multipart": false,
+          "gender": "male",
+          "part1": "ends_in",
+          "value1": "й",
+          "operation": "replace",
+          "operation_value": "я"
         }
       ]
     },
     "ins": {
       "keyword": "ins",
       "latin_name": "Instrumentalis",
-      "native_name": "\u0422\u0432\u043e\u0440\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
-      "description": "\u0414\u043e\u0432\u043e\u043b\u0435\u043d - \u041a\u0435\u043c? \u0427\u0435\u043c?",
+      "native_name": "Творительный падеж",
+      "description": "Доволен - Кем? Чем?",
       "application": "words",
       "rules": [
         
       ]
     },
-    "nom": {
-      "keyword": "nom",
-      "latin_name": "Nominativus",
-      "native_name": "\u0418\u043c\u0435\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
-      "description": "\u0415\u0441\u0442\u044c - \u041a\u0442\u043e? \u0427\u0442\u043e?",
+    "pre": {
+      "keyword": "pre",
+      "latin_name": "Prepositivus",
+      "native_name": "Предложный Падеж",
+      "description": "Думаю - О ком? О чём?",
       "application": "words",
       "rules": [
         
@@ -164,8 +252,8 @@
     "pos": {
       "keyword": "pos",
       "latin_name": "Possessive",
-      "native_name": "\u041f\u0440\u0438\u0442\u044f\u0436\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
-      "description": "\u0427\u0435\u0439?",
+      "native_name": "Притяжательный Падеж",
+      "description": "Чей?",
       "application": "words",
       "rules": [
         {
@@ -184,16 +272,6 @@
           "operation": "append",
           "operation_value": "a"
         }
-      ]
-    },
-    "pre": {
-      "keyword": "pre",
-      "latin_name": "Prepositivus",
-      "native_name": "\u041f\u0440\u0435\u0434\u043b\u043e\u0436\u043d\u044b\u0439 \u043f\u0430\u0434\u0435\u0436",
-      "description": "\u0414\u0443\u043c\u0430\u044e - \u041e \u043a\u043e\u043c? \u041e \u0447\u0451\u043c?",
-      "application": "words",
-      "rules": [
-        
       ]
     }
   }

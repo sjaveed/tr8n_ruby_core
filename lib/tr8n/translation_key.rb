@@ -38,9 +38,9 @@ class Tr8n::TranslationKey < Tr8n::Base
       attrs['translations'].each do |locale, translations|
         language = application.language(locale)
         self.attributes[:translations][locale] ||= []
-        translations.each do |trn|
-          trn = Tr8n::Translation.new(trn.merge(:translation_key => self, :locale => language.locale, :language => language))
-          self.attributes[:translations][locale] << trn
+        translations.each do |translation_hash|
+          translation = Tr8n::Translation.new(translation_hash.merge(:translation_key => self, :locale => language.locale, :language => language))
+          self.attributes[:translations][locale] << translation
         end
       end
     end

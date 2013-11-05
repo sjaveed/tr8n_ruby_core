@@ -42,7 +42,21 @@ class Tr8n::Rules::Base < Tr8n::Base
   end
   
   def self.token_value(token)
-    return nil unless token and token.respond_to?(method_name)
+    return nil if token.nil?
+
+    if token.is_a?(Hash)
+      if token[:object]
+        if token[:object].is_a?(Hash)
+          return token[:object][method_name] || token[:object][method_name.to_sym]
+        end
+        return nil unless token[:object].respond_to?(method_name)
+        return token[:object].send(method_name)
+      end
+
+      return token[method_name]
+    end
+
+    return nil unless token.respond_to?(method_name)
     token.send(method_name)
   end
 
@@ -67,7 +81,7 @@ class Tr8n::Rules::Base < Tr8n::Base
     true
   end
 
-  def self.transform_params_to_options(params)
+  def self.default_transform_options(params, token)
     raise Tr8n::Exception.new("This method must be implemented in the extending rule") 
   end
 
@@ -76,7 +90,15 @@ class Tr8n::Rules::Base < Tr8n::Base
       raise Tr8n::Exception.new("Invalid form for token #{token}")
     end
 
-    options = transform_params_to_options(params)
+    options = {}
+    if params[0].index(':')
+      params.each do |arg|
+        parts = arg.split(':')
+        options[parts.first.strip.to_sym] = parts.last.strip
+      end
+    else 
+      options = default_transform_options(params, token)
+    end
 
     matched_key = nil
     options.keys.each do |key|

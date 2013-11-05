@@ -150,11 +150,4 @@ class Tr8n::Config < Tr8n::Base
     }
   end
 
-  def data_token_classes
-    token_classes['data']
-  end
-
-  def decoration_token_classes
-    token_classes['decoration']
-  end
 end

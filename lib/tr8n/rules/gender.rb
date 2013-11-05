@@ -29,15 +29,6 @@ class Tr8n::Rules::Gender < Tr8n::Rules::Base
     :gender
   end
 
-  def self.token_value(token)
-    if token.is_a?(Hash)
-      return token[method_name] || token[method_name.to_sym]
-    end
-
-    return nil unless token and token.respond_to?(method_name)
-    token.send(method_name)
-  end
-
   def self.gender_object_value_for(type)
     Tr8n.config.rules_engine[:gender][:method_values][type.to_sym]
   end
@@ -52,28 +43,21 @@ class Tr8n::Rules::Gender < Tr8n::Rules::Base
   # {user | he, she, he/she}
   # {user | male: he, female: she, unknown: he/she}
   # {user | female: she, other: he}
-  def self.transform_params_to_options(params)
+  def self.default_transform_options(params, token)
     options = {}
-    if params[0].index(':')
-      params.each do |arg|
-        parts = arg.split(':')
-        options[parts.first.strip.to_sym] = parts.last.strip
-      end
-    else # default falback to {|| male, female} or {|| male, female, unknown} 
-      if params.size == 1 # doesn't matter
-        options[:other] = params[0]
-      elsif params.size == 2 # {|| singular}
-        options[:male] = params[0]
-        options[:female] = params[1]
-        options[:other] = "#{params[0]}/#{params[1]}"
-      elsif params.size == 3
-        options[:male] = params[0]
-        options[:female] = params[1]
-        options[:other] = params[2]
-      else
-        raise Tr8n::Exception.new("Invalid number of parameters in the transform token #{token}")
-      end  
-    end
+    if params.size == 1 # doesn't matter
+      options[:other] = params[0]
+    elsif params.size == 2 # {|| singular}
+      options[:male] = params[0]
+      options[:female] = params[1]
+      options[:other] = "#{params[0]}/#{params[1]}"
+    elsif params.size == 3
+      options[:male] = params[0]
+      options[:female] = params[1]
+      options[:other] = params[2]
+    else
+      raise Tr8n::Exception.new("Invalid number of parameters in the transform token #{token}")
+    end  
     options    
   end
   

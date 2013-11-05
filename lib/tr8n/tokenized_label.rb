@@ -34,7 +34,7 @@ class Tr8n::TokenizedLabel
 
   # scans for all token types    
   def data_tokens
-    @data_tokens ||= Tr8n::Tokens::Base.register_data_tokens(label)
+    @data_tokens ||= Tr8n::Tokens::Base.register_tokens(label, 'data')
   end
 
   def data_tokens?
@@ -42,7 +42,7 @@ class Tr8n::TokenizedLabel
   end
 
   def decoration_tokens
-    @decoration_tokens ||= Tr8n::Tokens::Base.register_decoration_tokens(label)
+    @decoration_tokens ||= Tr8n::Tokens::Base.register_tokens(label, 'decoration')
   end
 
   def decoration_tokens?
