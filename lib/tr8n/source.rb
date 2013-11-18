@@ -1,5 +1,5 @@
 #--
-# Copyright (c) 2010-2013 Michael Berkovich, tr8nhub.com
+# Copyright (c) 2013 Michael Berkovich, tr8nhub.com
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -40,64 +40,37 @@ class Tr8n::Source < Tr8n::Base
     path
   end
 
-  def language_updated_at(language)
-    @language_updated_at ||= {}
-    @language_updated_at[language.locale]
+  def initialize(attrs = {})
+    super
+
+    self.translation_keys = nil
+    if attrs["translation_keys"]
+      self.translation_keys = {}
+      attrs["translation_keys"].each do |tk|
+        tkey = Tr8n::TranslationKey.new(tk.merge(:application => application))
+        self.translation_keys[tkey.key] = application.cache_translation_key(tkey)
+      end
+    end
   end
 
-  def set_language_updated_at(language, time = Time.now)
-    @language_updated_at ||= {}
-    @language_updated_at[language.locale] = time
-  end
-
-  def language_needs_refetch?(language)
-    # by default languages will be refetched for each source every hour
-    language_updated_at(language).nil? or language_updated_at(language) < Time.now - 1.hour
+  def self.cache_key(source_key, locale)
+    "s@_[#{locale}]_[#{source_key}]"
   end
 
   def fetch_translations_for_language(language, options = {})
-    Tr8n.logger.debug("calling fetch_translations_for_language: #{language.locale}")
+    return translation_keys if translation_keys
 
-    # for current translators who use inline mode - always fetch translations
-    if Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
-      return Tr8n.config.current_translation_keys if Tr8n.config.current_translation_keys
+    keys_with_translations = application.get("source/translations",
+                                             {:source => source, :locale => language.locale},
+                                             {:class => Tr8n::TranslationKey, :attributes => {:application => application}})
 
-      Tr8n.logger.debug("fetching translations for current translator in inline mode")
-      keys_with_translations = application.get("source/translations", {:source => source, :locale => language.locale}, {:class => Tr8n::TranslationKey, :attributes => {:application => application, :language => language}})
-      fetched_keys = {}
-      keys_with_translations.each do |tkey|
-        fetched_keys[tkey.key] = tkey
-      end
-      Tr8n.config.current_translation_keys = fetched_keys
-      return fetched_keys
+    self.translation_keys = {}
+
+    keys_with_translations.each do |tkey|
+      self.translation_keys[tkey.key] = application.cache_translation_key(tkey)
     end
 
-    # return keys if they have already been fetched recently
-    if translation_keys and not language_needs_refetch?(language)
-      Tr8n.logger.debug("cache hit: using translations for [#{source}] in [#{language.locale}]")
-      return translation_keys 
-    end
-
-    set_language_updated_at(language)
-    keys_with_translations = application.get("source/translations", {:source => source, :locale => language.locale}, {:class => Tr8n::TranslationKey, :attributes => {:application => application, :language => language}})
-
-    Tr8n.logger.trace("caching keys") do 
-      self.attributes[:translation_keys] = {}
-      keys_with_translations.each do |tkey|
-        Tr8n.logger.debug(tkey.label)
-        self.attributes[:translation_keys][tkey.key] = application.cache_translation_key(tkey)
-      end
-    end
-
-    self.attributes[:translation_keys]
-  end
-
-  def translation_keys
-    self.attributes[:translation_keys] ||= {}
-  end
-
-  def reset
-    self.attributes[:translation_keys] = {}
+    self.translation_keys
   end
 
 end

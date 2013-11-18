@@ -1,5 +1,5 @@
 #--
-# Copyright (c) 2010-2013 Michael Berkovich, tr8nhub.com
+# Copyright (c) 2013 Michael Berkovich, tr8nhub.com
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -22,39 +22,22 @@
 #++
 
 module Tr8nCore
+  module Modules
+    module Logger
 
-end
+      def debug(msg)
+        Tr8n::Logger.debug(msg)
+      end
 
-module Tr8n
-  module Tokens
-  end
+      def info(msg)
+        Tr8n::Logger.info(msg)
+      end
 
-  module Rules
-  end
+      def error(msg)
+        Tr8n::Logger.error(msg)
+      end
 
-  module Decorators
-  end
-end
-
-# require 'FileUtils'
-
-[
- "tr8n/base.rb",
- "tr8n",
- "tr8n/rules_engine",
- "tr8n/tokens",
- "tr8n/decorators",
- "tr8n_core/ext",
- "tr8n_core/modules",
-].each do |f|
-  if f.index('.rb')
-    file = File.expand_path(File.join(File.dirname(__FILE__), f))
-    require(file)
-    next
-  end
-
-  Dir[File.expand_path("#{File.dirname(__FILE__)}/#{f}/*.rb")].sort.each do |file|
-    require(file)
+    end
   end
 end
 

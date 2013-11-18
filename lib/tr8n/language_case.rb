@@ -28,23 +28,34 @@ class Tr8n::LanguageCase < Tr8n::Base
 
   def initialize(attrs = {})
     super
-    if attrs['rules']
-      self.attributes[:rules] = attrs['rules'].collect{ |rule| Tr8n::LanguageCaseRule.new(rule.merge(:language_case => self)) }
+    self.attributes[:rules] = []
+    if hash_value(attrs, :rules)
+      self.attributes[:rules] = hash_value(attrs, :rules).collect{ |rule| Tr8n::LanguageCaseRule.new(rule.merge(:language_case => self)) }
     end
   end
 
-  def apply(object, value, options = {})
+  def html_tag_expression
+    /<\/?[^>]*>/
+  end
+
+  def find_matching_rule(value, object = nil)
+    rules.each do |rule|
+      return rule if rule.evaluate(value, object)
+    end
+    nil
+  end
+
+  def apply(value, object = nil, options = {})
     value = value.to_s
-    html_tag_expression = /<\/?[^>]*>/
     html_tokens = value.scan(html_tag_expression).uniq
     sanitized_value = value.gsub(html_tag_expression, "")
-    
+
     if application == 'phrase'
       words = [sanitized_value]
-    else  
+    else
       words = sanitized_value.split(/[\s\/\\]/).uniq
     end
-    
+
     # replace html tokens with temporary placeholders {$h1}
     html_tokens.each_with_index do |html_token, index|
       value = value.gsub(html_token, "{$h#{index}}")
@@ -54,50 +65,33 @@ class Tr8n::LanguageCase < Tr8n::Base
     words.each_with_index do |word, index|
       value = value.gsub(word, "{$w#{index}}")
     end
-    
+
     transformed_words = []
     words.each do |word|
-
-      # TODO: implement language case exceptions
-      # lcvm = Tr8n::LanguageCaseValueMap.by_language_and_keyword(language, word)
-      
-      # if lcvm
-      #   map_case_value = lcvm.value_for(object, keyword)
-      #   case_value = map_case_value.blank? ? word : map_case_value
-      # else
-      case_rule = match_rule(object, word)
-      case_value = case_rule ? case_rule.apply(word) : word 
-      # end
-
+      case_rule = find_matching_rule(word, object)
+      case_value = case_rule ? case_rule.apply(word) : word
       transformed_words << decorate(word, case_value, case_rule, options)
     end
-    
-    # replace back the temporary placeholders with the html tokens  
+
+    # replace back the temporary placeholders with the html tokens
     transformed_words.each_with_index do |word, index|
       value = value.gsub("{$w#{index}}", word)
     end
-    
-    # replace back the temporary placeholders with the html tokens  
+
+    # replace back the temporary placeholders with the html tokens
     html_tokens.each_with_index do |html_token, index|
       value = value.gsub("{$h#{index}}", html_token)
     end
-     
-    value
-  end
 
-  def match_rule(object, value)
-    rules.each do |rule|
-      return rule if rule.evaluate(object, value)
-    end
-    nil
+    value
   end
 
   def decorate(word, case_value, case_rule, options = {})
     return case_value if options[:skip_decorations]
     return case_value if language.default?
     return case_value unless Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
-    
-    "<span class='tr8n_language_case' case_id='#{id}' rule_id='#{case_rule ? case_rule.id : ''}' case_key='#{word.gsub("'", "\'")}'>#{case_value}</span>"
+
+    "<span class='tr8n_language_case' data-case_id='#{id}' data-rule_id='#{case_rule ? case_rule.id : ''}' data-case_key='#{word.gsub("'", "\'")}'>#{case_value}</span>"
   end
 
 end

@@ -1,5 +1,5 @@
 #--
-# Copyright (c) 2010-2013 Michael Berkovich, tr8nhub.com
+# Copyright (c) 2013 Michael Berkovich, tr8nhub.com
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,42 +21,30 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-class Tr8n::Rules::List < Tr8n::Rules::Base
-  belongs_to :language
-  attributes :type, :keyword, :value
+class Tr8n::LanguageContextRule < Tr8n::Base
+  belongs_to  :language_context
+  attributes  :keyword, :description, :examples, :conditions, :conditions_expression
 
-  def self.key
-    :list
+  def fallback?
+    keyword.to_s == 'other'
   end
 
-  # FORM: [one, many]
-  # {actors|| likes, like} this story
-  def self.default_transform_options(params, token)
-    options = {}
-    if params.size == 2 # doesn't matter
-      options[:one] = params[0]
-      options[:other] = params[1]
-    else
-      raise Tr8n::Exception.new("Invalid number of parameters in the transform token #{token}")
-    end  
-    options    
+  def conditions_expression
+    self.attributes[:conditions_expression] ||= Tr8n::RulesEngine::Parser.new(conditions).parse
   end
-  
-  def evaluate(token)
-    return false unless token.kind_of?(Enumerable)
-    
-    list_size = token_value(token)
-    return false if list_size == nil
-    list_size = list_size.to_i
 
-    case value
-      when "one_element" then
-        return true if list_size == 1
-      when "at_least_two_elements" then
-        return true if list_size >= 2
+  def evaluate(vars = {})
+    return true if fallback?
+
+    re = Tr8n::RulesEngine::Evaluator.new
+    vars.each do |key, value|
+      re.evaluate(["let", key, value])
     end
-    
-    false
+
+    re.evaluate(conditions_expression)
+  #rescue Exception => ex
+  #  Tr8n.logger.error("Failed to evaluate settings context rule #{conditions_expression}: #{ex.message}")
+  #  false
   end
-  
+
 end

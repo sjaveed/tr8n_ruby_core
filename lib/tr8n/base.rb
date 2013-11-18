@@ -74,6 +74,22 @@ class Tr8n::Base
     super
   end      
 
+  def self.hash_value(hash, key, opts = {})
+    return nil unless hash.is_a?(Hash)
+    return hash[key.to_s] || hash[key.to_sym] if opts[:whole]
+
+    value = hash
+    key.to_s.split('.').each do |part|
+      return nil unless value.is_a?(Hash)
+      value = value[part.to_sym] || value[part.to_s]
+    end
+    value
+  end
+
+  def hash_value(hash, key, opts = {})
+    self.class.hash_value(hash, key, opts)
+  end
+
   def reset!
     self.class.thread_safe_attributes.each do |key|
       Thread.current[key] = nil

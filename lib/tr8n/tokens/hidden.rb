@@ -36,8 +36,7 @@
 #
 ####################################################################### 
 
-class Tr8n::Tokens::Hidden < Tr8n::Tokens::Base
-
+class Tr8n::Tokens::Hidden < Tr8n::Tokens::Data
   def self.expression
     /(\{_[\w]+\})/
   end
@@ -61,5 +60,24 @@ class Tr8n::Tokens::Hidden < Tr8n::Tokens::Base
   def language_rule
     nil
   end
-  
+
+  # return humanized form
+  def prepare_label_for_translator(label, language)
+    label.gsub(full_name, humanized_name)
+  end
+
+  # return humanized form
+  def prepare_label_for_suggestion(label, index, language)
+    label.gsub(full_name, humanized_name)
+  end
+
+  def humanized_name
+    @humanized_name ||= begin
+      hnm = name[1..-1].clone
+      hnm.gsub!('__', ' ')
+      hnm.gsub!('_', '/')
+      hnm
+    end
+  end
+
 end

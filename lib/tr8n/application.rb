@@ -26,8 +26,8 @@ require 'faraday'
 API_PATH = '/tr8n/api/'
 
 class Tr8n::Application < Tr8n::Base
-  attributes :host, :key, :secret, :name, :description, :definition, :version, :updated_at
-  has_many :languages, :translation_keys, :sources, :components
+  attributes :host, :key, :secret, :name, :description, :threshold, :translator_level, :version, :updated_at, :default_locale
+  has_many :features, :languages, :translation_keys, :sources, :components, :tokens
 
   def self.init(host, key, secret, options = {})
     options[:definition] = true if options[:definition].nil?
@@ -40,18 +40,31 @@ class Tr8n::Application < Tr8n::Base
 
   def initialize(attrs = {})
     super
-    unless attrs['definition']
-      self.attributes[:definition] = {}
+    if hash_value(attrs, :languages)
+      self.attributes[:languages] = hash_value(attrs, :languages).collect{ |l| Tr8n::Language.new(l.merge(:application => self)) }
     end
-    if attrs['languages']
-      self.attributes[:languages] = attrs['languages'].collect{ |l| Tr8n::Language.new(l.merge(:application => self)) }
+    if hash_value(attrs, :sources)
+      self.attributes[:sources] = hash_value(attrs, :sources).collect{ |l| Tr8n::Source.new(l.merge(:application => self)) }
     end
-    if attrs['sources']
-      self.attributes[:sources] = attrs['sources'].collect{ |l| Tr8n::Source.new(l.merge(:application => self)) }
+    if hash_value(attrs, :components)
+      self.attributes[:components] = hash_value(attrs, :components).collect{ |l| Tr8n::Component.new(l.merge(:application => self)) }
     end
-    if attrs['components']
-      self.attributes[:components] = attrs['components'].collect{ |l| Tr8n::Component.new(l.merge(:application => self)) }
-    end
+  end
+
+  def cache_key(key)
+    "a@_[#{key}]"
+  end
+
+  def language(locale = nil, fetch = true)
+    locale ||= Tr8n.config.default_locale
+
+    return @languages_by_locale[locale] if @languages_by_locale[locale]
+    #Tr8n::Cache.fetch()
+    return nil unless fetch
+
+    # for translator languages will continue to build application cache
+    @languages_by_locale[locale] = get("language", {:locale => locale}, {:class => Tr8n::Language, :attributes => {:application => self}})
+    @languages_by_locale[locale]
   end
 
   def update_cache_version
@@ -75,31 +88,7 @@ class Tr8n::Application < Tr8n::Base
     return if @languages_by_locale[lang.locale]
     
     lang.application = self
-    self.attributes[:languages] ||= []
-    self.attributes[:languages] << lang
     @languages_by_locale[lang.locale] = lang
-  end
-
-  def language(locale = nil)
-    locale ||= default_locale
-
-    @languages_by_locale ||= begin
-      langs = {}
-      languages.each do |lang|      
-        langs[lang.locale] = lang
-      end
-      langs
-    end
-    return @languages_by_locale[locale] if @languages_by_locale[locale]
-
-    # for translator languages will continue to build application cache
-    @languages_by_locale[locale] = get("language", {:locale => locale}, {:class => Tr8n::Language, :attributes => {:application => self}})    
-    @languages_by_locale[locale]
-  end
-
-  def languages(*locales)
-    return super if locales.size == 0
-    locales.collect{|locale| language(locale)}
   end
 
   def featured_languages
@@ -110,43 +99,19 @@ class Tr8n::Application < Tr8n::Base
     get("application/translators", {}, {:class => Tr8n::Translator, :attributes => {:application => self}})
   end
 
-  def default_decoration_tokens
-    definition["default_decoration_tokens"]
-  end
-
   def default_decoration_token(token)
-    default_decoration_tokens[token.to_s]
-  end
-
-  def default_data_tokens
-    definition["default_data_tokens"]
+    hash_value(tokens, "decoration.#{token.to_s}")
   end
 
   def default_data_token(token)
-    default_data_tokens[token.to_s]
-  end
-
-  def enable_language_cases?
-    definition["enable_language_cases"]
-  end
-
-  def enable_language_flags?
-    definition["enable_language_flags"]
-  end
-
-  def rules
-    definition["rules"]
-  end
-
-  def rule_config_by_type(type)
-    rules[type]
+    hash_value(tokens, "data.#{token.to_s}")
   end
 
   def source_by_key(key)
     key = key.source if key.is_a?(Tr8n::Source)
     @sources_by_key ||= begin
       srcs = {}
-      sources.each do |src|      
+      (sources || []).each do |src|
         srcs[src.source] = src
       end
       srcs
@@ -212,13 +177,8 @@ class Tr8n::Application < Tr8n::Base
     @missing_keys_by_sources = nil
   end
 
-  def default_locale
-    @default_locale ||= definition['default_locale'] || 'en-US'
-  end
-
-  # deprecated
-  def default_language
-    language(default_locale)
+  def feature_enabled?(key)
+    hash_value(features, key.to_s)
   end
 
   #######################################################################################################

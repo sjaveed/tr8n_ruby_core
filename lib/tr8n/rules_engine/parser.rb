@@ -25,25 +25,58 @@ module Tr8n
   module RulesEngine
 
     class Parser
-      attr_reader :tokens
+      attr_reader :tokens, :expression
+
       def initialize(expression)
-        @tokens = expression.scan /[()]|\w+|@\w+|[\+\-\!\|\=>&<\*\/%]+|".*?"|'.*?'/
+        @expression = expression
+        if expression =~ /^\(/
+          @tokens = expression.scan(/[()]|\w+|@\w+|[\+\-\!\|\=>&<\*\/%]+|".*?"|'.*?'/)
+        end
       end
 
       def parse
-        token = @tokens.shift
+        return @expression unless tokens
+        token = tokens.shift
+        return nil if token.nil?
         return parse_list if (token) == '('
-        return token[1..-2] if token =~ /['"].*/
+        return token[1..-2].to_s if token =~ /^['"].*/
         return token.to_i if token =~ /\d+/
         token.to_s
       end
 
       def parse_list
         list = []
-        list << parse until @tokens.first == ')'
-        @tokens.shift
+        list << parse until tokens.empty? or tokens.first == ')'
+        tokens.shift
         list
       end
+
+      def class_for(token)
+        {
+          /^[\(]$/    => 'open_paren',
+          /^[\)]$/    => 'close_paren',
+          /^['|"]/    => 'string',
+          /^@/        => 'variable',
+          /^[\d|.]+$/ => 'number',
+        }.each do |regexp, cls|
+          return cls if regexp.match(token)
+        end
+        'symbol'
+      end
+
+      def decorate
+        html = ["<span class='tr8n_sexp'>"]
+        if tokens
+          html << tokens.collect do |token|
+            "<span class='#{class_for(token)}'>#{token}</span>"
+          end.join('')
+        else
+          html << "<span class='#{class_for(expression)}'>#{expression}</span>"
+        end
+        html << '</span>'
+        html.join('').html_safe
+      end
+
     end
 
   end

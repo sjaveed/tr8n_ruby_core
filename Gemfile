@@ -1,16 +1,12 @@
 source 'https://rubygems.org'
 
-gem 'rake', '>= 0.9'
-gem 'rdoc', '>= 3.9'
-
-group :development do
-  gem 'pry'
-  gem 'pry-debugger', :platforms => :mri_19
-end
+gem "rake", "~> 10.1.0"
+gem "rdoc", "~> 4.0.1"
 
 group :test do
-  gem 'rspec', '>= 2.11'
-  gem 'rspec-mocks', '>= 2.12.2'
+  gem "rspec", "~> 2.14.1"
+  gem "rspec-core", "~> 2.14.7"
+  gem "rspec-mocks", "~> 2.14.4"
 end
 
 gemspec

@@ -23,7 +23,7 @@
 
 class Tr8n::Translator < Tr8n::Base
   belongs_to :application
-  attributes :id, :name, :email, :gender, :mugshot, :link, :inline
+  attributes :id, :name, :email, :gender, :mugshot, :link, :inline, :features
   attributes :voting_power, :rank, :level, :locale, :manager, :code, :access_token 
 
   def self.authorize(application, username, password, options = {})
@@ -44,6 +44,11 @@ class Tr8n::Translator < Tr8n::Base
 
   def translations
     application.get("translator/translations", {:access_token => access_token}, {:class => Tr8n::Application})
-  end  
+  end
+
+  def feature_enabled?(key)
+    return false unless features
+    features[key]
+  end
 
 end

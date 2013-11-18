@@ -23,67 +23,74 @@
 
 class Tr8n::Language < Tr8n::Base
   belongs_to  :application
-  attributes  :locale, :name, :english_name, :native_name, :right_to_left, :enabled
-  attributes  :google_key, :facebook_key, :myheritage_key
-  has_many    :context_rules, :language_cases
+  attributes  :locale, :name, :english_name, :native_name, :right_to_left, :flag_url
+  has_many    :contexts, :cases
 
   def initialize(attrs = {})
     super
 
-    self.attributes[:context_rules] = {}
-    if attrs['context_rules']
-      attrs['context_rules'].each do |rule_class, hash|
-        self.attributes[:context_rules][rule_class] ||= {}
-        hash.each do |keyword, rule|
-          self.attributes[:context_rules][rule_class][keyword] = Tr8n::Rules::Base.rule_class(rule_class).new(rule.merge(:language => self))
-        end
+    self.attributes[:contexts] = {}
+    if hash_value(attrs, :contexts)
+      hash_value(attrs, :contexts).each do |key, context|
+        self.attributes[:contexts][key] = Tr8n::LanguageContext.new(context.merge(:language => self))
       end
     end
 
-    self.attributes[:language_cases] = {}
-    if attrs['language_cases']
-      attrs['language_cases'].each do |key, lcase|
-        self.attributes[:language_cases][key] = Tr8n::LanguageCase.new(lcase.merge(:language => self))
+    self.attributes[:cases] = {}
+    if hash_value(attrs, :cases)
+      hash_value(attrs, :cases).each do |key, lcase|
+        self.attributes[:cases][key] = Tr8n::LanguageCase.new(lcase.merge(:language => self))
       end
     end
   end
 
-  def context_rules_by_type(type)
-    self.context_rules[type.to_s]
+  def self.cache_key(locale)
+    "l@_[#{locale}]"
   end
 
-  def context_rule_by_type_and_key(type, key)
-    return nil unless self.context_rules
-    return nil unless self.context_rules[type.to_s]
-    self.context_rules[type.to_s][key.to_s]
+  def context_by_keyword(keyword)
+    contexts[keyword]
+  end
+
+  def context_by_token_name(token_name)
+    contexts.values.detect{|ctx| ctx.applies_to_token?(token_name)}
+  end
+
+  def language_case_by_keyword(keyword)
+    cases[keyword]
+  end
+
+  def has_definition?
+    contexts.any?
   end
 
   def default?
+    return true unless application
     application.default_locale == locale
-  end
-
-  def language_cases
-    super || {}
-  end
-
-  def language_case_by_key(key)
-    language_cases[key.to_s]
-  end
-    
-  def full_name
-    return english_name if english_name == native_name
-    "#{english_name} - #{native_name}"
   end
 
   def dir
     right_to_left? ? "rtl" : "ltr"
   end
-  
+
   def align(dest)
     return dest unless right_to_left?
     dest.to_s == 'left' ? 'right' : 'left'
   end
-  
+
+  def full_name
+    return english_name if english_name == native_name
+    "#{english_name} - #{native_name}"
+  end
+
+
+
+
+
+
+
+
+
   def translate(label, desc = "", tokens = {}, options = {})
     raise Tr8n::Exception.new("The label #{label} is being translated twice") if label.tr8n_translated?
 

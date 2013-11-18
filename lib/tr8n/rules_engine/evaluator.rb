@@ -31,85 +31,124 @@ module Tr8n
         @vars = {}
         @env = {
             # McCarthy's Elementary S-functions and Predicates
-            "label" => lambda { |(l,r),     ctx| @env[l] = @vars[l] = r },
-            "quote" => lambda { |(sexpr),   ctx| sexpr },
-            "car"   => lambda { |(list),    ctx| list[0] },
-            "cdr"   => lambda { |(list),    ctx| list.drop(1) },
-            "cons"  => lambda { |(e,cell),  ctx| [e] + cell },
-            "eq"    => lambda { |(l,r),     ctx| l == r },
-            "atom"  => lambda { |(sexpr),   ctx| [Symbol, String, Fixnum, Float].include?(sexpr.class) },
-            "cond"  => lambda { |(c, t, f), ctx| eval(c, ctx) ? eval(t, ctx) : eval(f, ctx) },
+            'label'   => lambda { |l, r|      @env[l] = @vars[l] = r },
+            'quote'   => lambda { |expr|      expr },
+            'car'     => lambda { |list|      list[0] },
+            'cdr'     => lambda { |list|      list.drop(1) },
+            'cons'    => lambda { |e, cell|   [e] + cell },
+            'eq'      => lambda { |l, r|      l == r },
+            'atom'    => lambda { |expr|      [Symbol, String, Fixnum, Float].include?(expr.class) },
+            'cond'    => lambda { |c, t, f|   evaluate(c) ? evaluate(t) : evaluate(f) },
 
             # Tr8n Extensions
-            "="       => lambda { |(l,r),     ctx| l == r },                                            # ["=", 1, 2]
-            "!="      => lambda { |(l,r),     ctx| l != r },                                            # ["!=", 1, 2]
-            "<"       => lambda { |(l,r),     ctx| l < r },                                             # ["<", 1, 2]
-            ">"       => lambda { |(l,r),     ctx| l > r },                                             # [">", 1, 2]
-            "+"       => lambda { |(l,r),     ctx| l + r },                                             # ["+", 1, 2]
-            "-"       => lambda { |(l,r),     ctx| l - r },                                             # ["-", 1, 2]
-            "*"       => lambda { |(l,r),     ctx| l * r },                                             # ["*", 1, 2]
-            "%"       => lambda { |(l,r),     ctx| l % r },                                             # ["%", 14, 10]
-            "/"       => lambda { |(l,r),     ctx| (l * 1.0) / r },                                     # ["/", 1, 2]
-            "!"       => lambda { |(val),     ctx| not val },                                           # ["!", ["true"]]
-            "&&"      => lambda { |(*sexpr),  ctx| sexpr.all?{|e| eval(e, ctx)}  },                     # ["&&", [], [], ...]
-            "||"      => lambda { |(*sexpr),  ctx| sexpr.any?{|e| eval(e, ctx)} },                      # ["||", [], [], ...]
-            "if"      => lambda { |(c, t, f), ctx| eval(c, ctx) ? eval(t, ctx) : eval(f, ctx) },        # ["if", "cond", "true", "false"]
-            "let"     => lambda { |(l,r),     ctx| @env[l] = @vars[l] = r },                            # ["let", "n", 5]
-            "and"     => lambda { |(*sexpr),  ctx| sexpr.all?{|e| eval(e, ctx)}  },                     # ["and", [], [], ...]
-            "or"      => lambda { |(*sexpr),  ctx| sexpr.any?{|e| eval(e, ctx)} },                      # ["or", [], [], ...]
-            "not"     => lambda { |(val),     ctx| not val },                                           # ["not", ["true"]]
-            "mod"     => lambda { |(l,r),     ctx| l % r },                                             # ["mod", "n", 10]
-            "append"  => lambda { |(l,r),     ctx| r.to_s + l.to_s},                                    # ["append", "world", "hello "]
-            "prepend" => lambda { |(l,r),     ctx| l.to_s + r.to_s},                                    # ["prepend", "hello  ", "world"]
-            "true"    => lambda { |(sexpr),   ctx| true },                                              # ["true"]
-            "false"   => lambda { |(sexpr),   ctx| false },                                             # ["false"]
-            "date"    => lambda { |(sexpr),   ctx| Date.strptime(sexpr, '%Y-%m-%d')},                   # ["date", "2010-01-01"]
-            "today"   => lambda { |(sexpr),   ctx| Time.now.to_date},                                   # ["today"]
-            "time"    => lambda { |(sexpr),   ctx| Time.strptime(sexpr, '%Y-%m-%d %H:%M:%S')},          # ["time", "2010-01-01 10:10:05"]
-            "now"     => lambda { |(sexpr),   ctx| Time.now},                                           # ["now"]
-            "match"   => lambda { |(l,r),     ctx|                                                      # ["match", /a/, "abc"]
-              l = Regexp.new(/^\//.match(l) ? l[1..-2] : l) if l.is_a?(String)
-              not l.match(r).nil?;
+            '='       => lambda { |l, r|      l == r },                                             # ['=', 1, 2]
+            '!='      => lambda { |l, r|      l != r },                                             # ['!=', 1, 2]
+            '<'       => lambda { |l, r|      l < r },                                              # ['<', 1, 2]
+            '>'       => lambda { |l, r|      l > r },                                              # ['>', 1, 2]
+            '+'       => lambda { |l, r|      l + r },                                              # ['+', 1, 2]
+            '-'       => lambda { |l, r|      l - r },                                              # ['-', 1, 2]
+            '*'       => lambda { |l, r|      l * r },                                              # ['*', 1, 2]
+            '%'       => lambda { |l, r|      l % r },                                              # ['%', 14, 10]
+            'mod'     => lambda { |l, r|      l % r },                                              # ['mod', '@n', 10]
+            '/'       => lambda { |l, r|      (l * 1.0) / r },                                      # ['/', 1, 2]
+            '!'       => lambda { |expr|      not expr },                                           # ['!', ['true']]
+            'not'     => lambda { |val|       not val },                                            # ['not', ['true']]
+            '&&'      => lambda { |*expr|     expr.all?{|e| evaluate(e)} },                         # ['&&', [], [], ...]
+            'and'     => lambda { |*expr|     expr.all?{|e| evaluate(e)} },                         # ['and', [], [], ...]
+            '||'      => lambda { |*expr|     expr.any?{|e| evaluate(e)} },                         # ['||', [], [], ...]
+            'or'      => lambda { |*expr|     expr.any?{|e| evaluate(e)} },                         # ['or', [], [], ...]
+            'if'      => lambda { |c, t, f|   evaluate(c) ? evaluate(t) : evaluate(f) },            # ['if', 'cond', 'true', 'false']
+            'let'     => lambda { |l, r|      @env[l] = @vars[l] = r },                             # ['let', 'n', 5]
+            'true'    => lambda { true },                                                           # ['true']
+            'false'   => lambda { false },                                                          # ['false']
+
+            'date'    => lambda { |date|      Date.strptime(date, '%Y-%m-%d') },                    # ['date', '2010-01-01']
+            'today'   => lambda { Time.now.to_date },                                               # ['today']
+            'time'    => lambda { |expr|      Time.strptime(expr, '%Y-%m-%d %H:%M:%S') },           # ['time', '2010-01-01 10:10:05']
+            'now'     => lambda { Time.now },                                                       # ['now']
+
+            'append'  => lambda { |l, r|      r.to_s + l.to_s },                                    # ['append', 'world', 'hello ']
+            'prepend' => lambda { |l, r|      l.to_s + r.to_s },                                    # ['prepend', 'hello  ', 'world']
+            'match'   => lambda { |search, subject|                                                 # ['match', /a/, 'abc']
+              search = regexp_from_string(search)
+              not search.match(subject).nil?
             },
-            "in"      => lambda { |(l,r),     ctx|                                                      # ["in", "1,2,3,5..10,20..24", "@n"]
-              r = r.to_s.strip
-              l.split(',').each do |e|
+            'in'      => lambda { |values, search|                                                  # ['in', '1,2,3,5..10,20..24', '@n']
+              search = search.to_s.strip
+              values.split(',').each do |e|
                 if e.index('..')
                   bounds = e.strip.split('..')
-                  return true if (bounds.first.strip..bounds.last.strip).include?(r)
+                  return true if (bounds.first.strip..bounds.last.strip).include?(search)
                 end
-                return true if e.strip == r
+                return true if e.strip == search
               end
               false
             },
-            "within"  => lambda { |(l,r),     ctx|                                                      # ["within", "0..3", "n"]
-              bounds = l.split('..').map{|d| Integer(d)}
-              (bounds.first..bounds.last).include?(r)
+            'within'  => lambda { |values, search|                                                 # ['within', '0..3', '@n']
+              bounds = values.split('..').map{|d| Integer(d)}
+              (bounds.first..bounds.last).include?(search)
             },
-            "replace" => lambda { |(search,replace,subject),     ctx|                                   # ["replace", "/^a/", "v", "abc"]
-              search = Regexp.new(/^\//.match(search) ? search[1..-2] : search) if search.is_a?(String)
+            'replace' => lambda { |search, replace, subject|                                       # ['replace', '/^a/', 'v', 'abc']
+                                                                                                   # handle regular expression
+              if /\/i$/.match(search)
+                replace = replace.gsub(/\$(\d+)/, '\\\\\1') # for compatibility with Perl notation
+              end
+              search = regexp_from_string(search)
               subject.gsub(search, replace)
+            },
+            'count'   => lambda { |list|                                                          # ['count', '@genders']
+              (list.is_a?(String) ? vars[list] : list).count
+            },
+            'all'     => lambda { |list, value|                                                   # ['all', '@genders', 'male']
+              list = (list.is_a?(String) ? vars[list] : list)
+              list.is_a?(Array) ? list.all?{|e| e == value} : false
+            },
+            'any'     => lambda { |list, value|                                                   # ['any', '@genders', 'female']
+              list = (list.is_a?(String) ? vars[list] : list)
+              list.is_a?(Array) ? list.any?{|e| e == value} : false
             },
         }
       end
 
-      def apply(fn, args, ctx=@env)
-        raise "undefined symbols #{fn}" unless @env.keys.include?(fn)
-        @env[fn].call(args, ctx)
+      def regexp_from_string(str)
+        return Regexp.new(/#{str}/) unless /^\//.match(str)
+
+        str = str.gsub(/^\//, '')
+
+        if /\/i$/.match(str)
+          str = str.gsub(/\/i$/, '')
+          return Regexp.new(/#{str}/i)
+        end
+
+        str = str.gsub(/\/$/, '')
+        Regexp.new(/#{str}/)
       end
 
-      def eval(sexpr, ctx=@env)
-        if @env["atom"].call([sexpr], ctx)
-          return ctx[sexpr] if ctx[sexpr]
-          return sexpr
+      def reset!
+        @vars.each do |var|
+          @env.delete(var)
+        end
+        @vars = {}
+      end
+
+      def apply(fn, args)
+        raise "undefined symbols #{fn}" unless @env.keys.include?(fn)
+        @env[fn].call(*args)
+      end
+
+      def evaluate(expr)
+        if @env['atom'].call(expr)
+          return @env[expr] if @env[expr]
+          return expr
         end
 
-        fn = sexpr[0]
-        args = (sexpr.drop 1)
-        unless ["quote", "cdr", "cond", "if", "&&", "||", "and", "or", "true", "false", "let"].member?(fn)
-          args = args.map { |a| self.eval(a, ctx) }
+        fn = expr[0]
+        args = expr.drop(1)
+
+        unless ['quote', 'car', 'cdr', 'cond', 'if', '&&', '||', 'and', 'or', 'true', 'false', 'let', 'count', 'all', 'any'].member?(fn)
+          args = args.map { |a| self.evaluate(a) }
         end
-        apply(fn, args, ctx)
+        apply(fn, args)
       end
     end
 

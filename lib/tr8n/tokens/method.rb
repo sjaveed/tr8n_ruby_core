@@ -30,27 +30,23 @@
 # 
 ####################################################################### 
 
-class Tr8n::Tokens::Method < Tr8n::Tokens::Base
+class Tr8n::Tokens::Method < Tr8n::Tokens::Data
   def self.expression
-    /(\{[^_:.][\w]*(\.[\w]+)(:[\w]+)?(::[\w]+)?\})/
+    /(\{[^_:.][\w]*(\.[\w]+)(:[\w]+)*(::[\w]+)*\})/
   end
 
   def object_name
-    @object_name ||= name.split(".").first
+    @object_name ||= short_name.split(".").first
   end
 
   def object_method_name
-    @object_method_name ||= name.split(".").last
+    @object_method_name ||= short_name.split(".").last
   end
 
-  def suffix
-    @suffix ||= object_name.split('_').last
-  end
-
-  def substitute(translation_key, language, label, values, options)
+  def substitute(translation_key, language, label, values = {}, options = {})
     object = values[object_name.to_sym]
-    raise Tr8n::Exception.new("Missing value for a token: #{full_name}") unless object
-    object_value = sanitize_token_value(object, object.send(object_method_name), options.merge(:sanitize_values => true), language)
+    raise Tr8n::Tr8n::Exception.new("Missing value for a token: #{full_name}") unless object
+    object_value = sanitize(object, object.send(object_method_name), options.merge(:sanitize_values => true), language)
     label.gsub(full_name, object_value)
   end
 end
