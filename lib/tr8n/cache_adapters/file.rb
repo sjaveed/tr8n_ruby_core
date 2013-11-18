@@ -21,11 +21,48 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-class Tr8n::Decorators::Default < Tr8n::Decorators::Base
-  attributes :language, :translation_key, :label, :options
+class Tr8n::CacheAdapters::File < Tr8n::Cache
 
-  def decorate
-    label
+  def self.cache_path
+    "#{Tr8n.config.cache_path}/files/current"
   end
-  
+
+  def self.file_name(key)
+    "#{key.gsub(/[\.\/]/, '-')}.json"
+  end
+
+  def self.file_path(key)
+    "#{cache_path}/#{file_name(key)}"
+  end
+
+  def fetch(key, opts = {})
+    path = self.class.file_path(key)
+
+    if File.exists(path)
+      info("Cache hit: #{key}")
+      data = File.read(path)
+      return deserialize_object(key, data)
+    end
+
+    info("Cache miss: #{key}")
+
+    yield
+  end
+
+  def store(key, data, opts = {})
+    warn("This is a readonly cache")
+  end
+
+  def delete(key, opts = {})
+    warn("This is a readonly cache")
+  end
+
+  def exist?(key, opts = {})
+    File.exists(file_path(key))
+  end
+
+  def clear(opts = {})
+    warn("This is a readonly cache")
+  end
+
 end

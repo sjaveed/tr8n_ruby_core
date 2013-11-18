@@ -21,11 +21,53 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-class Tr8n::Decorators::Default < Tr8n::Decorators::Base
-  attributes :language, :translation_key, :label, :options
+require 'dalli'
 
-  def decorate
-    label
+class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
+
+  def initialize
+    options = { :namespace => "tr8n", :compress => true }
+    @cache = Dalli::Client.new('localhost:11211', options)
   end
-  
+
+  def read_only?
+    false
+  end
+
+  def fetch(key, opts = {})
+    data = @cache.get(versioned_key(key))
+    if data
+      info("Cache hit: #{key}")
+      return deserialize_object(key, data)
+    end
+
+    info("Cache miss: #{key}")
+
+    return nil unless block_given?
+
+    data = yield
+
+    @cache.set(versioned_key(key), serialize_object(data))
+
+    data
+  end
+
+  def store(key, data, opts = {})
+    info("Cache store: #{key}")
+    @cache.set(versioned_key(key), serialize_object(data))
+  end
+
+  def delete(key, opts = {})
+    info("Cache delete: #{key}")
+  end
+
+  def exist?(key, opts = {})
+    data = @cache.get(versioned_key(key))
+    not data.nil?
+  end
+
+  def clear(opts = {})
+    info("Cache clear")
+  end
+
 end

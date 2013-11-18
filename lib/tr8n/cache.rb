@@ -1,5 +1,5 @@
 #--
-# Copyright (c) 2010-2013 Michael Berkovich, tr8nhub.com
+# Copyright (c) 2013 Michael Berkovich, tr8nhub.com
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,84 +21,88 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-class Tr8n::Cache
-  
-  def self.cache_store_params
-    [Tr8n.config.cache_store].flatten
-  end
-  
+module Tr8n
+
   def self.cache
-    return nil unless enabled?
-    
     @cache ||= begin
-      if Tr8n.config.cache_adapter == 'ActiveSupport::Cache'
-        store_params = cache_store_params
-        store_params[0] = store_params[0].to_sym
-        ActiveSupport::Cache.lookup_store(*store_params)
-      else
-        eval(Tr8n.config.cache_adapter)  
+      klass = Object.const_get("Tr8n::CacheAdapters::#{Tr8n.config.cache_adapter.camelcase}")
+      klass.new
+    end
+  end
+
+  class Cache
+
+    def enabled?
+      Tr8n.config.cache_enabled?
+    end
+
+    def cached_by_source?
+      true
+    end
+
+    def read_only?
+      true
+    end
+
+    def cache_name
+      self.class.name.underscore.split('_').last
+    end
+
+    def info(msg)
+      Tr8n.logger.info("#{cache_name} - #{msg}")
+    end
+
+    def warn(msg)
+      Tr8n.logger.warn("#{cache_name} - #{msg}")
+    end
+
+    def versioned_key(key)
+      "tr8n_rc_v#{Tr8n.config.cache_version}_#{key}"
+    end
+
+    def fetch(key, opts = {})
+      raise Tr8n::Exception.new("Must be implemented by the subclass")
+    end
+
+    def store(key, data, opts = {})
+      raise Tr8n::Exception.new("Must be implemented by the subclass")
+    end
+
+    def delete(key, opts = {})
+      raise Tr8n::Exception.new("Must be implemented by the subclass")
+    end
+
+    def exist?(key, opts = {})
+      raise Tr8n::Exception.new("Must be implemented by the subclass")
+    end
+
+    def clear(opts = {})
+      raise Tr8n::Exception.new("Must be implemented by the subclass")
+    end
+
+    def serialize_object(key, data)
+      unless ['a@', 'l@', 's@', 'c@'].include?(key[0..1])
+        return data
       end
+
+      data.to_json
     end
-  end
 
-  def self.enabled?
-    Tr8n.config.enable_caching?
-  end
+    def deserialize_object(key, data)
+      case key[0..1]
+        when 'a@'
+          return Tr8n::Application(JSON.parse(data))
+        when 'l@'
+          return Tr8n::Language(JSON.parse(data).merge(:application => Tr8n.config.application))
+        when 's@'
+          return Tr8n::Source(JSON.parse(data).merge(:application => Tr8n.config.application))
+        when 'c@'
+          return Tr8n::Component(JSON.parse(data).merge(:application => Tr8n.config.application))
+      end
 
-  def self.disabled?
-    not enabled?
-  end
-  
-  def self.version
-    Tr8n.config.application.version
-  end
-  
-  def self.versioned_key(key)
-    "tr8n_v#{version}_#{key}"
-  end
-
-  #################################################################
-  # Cache Adapter Methods
-  #################################################################
-  def self.fetch(key, opts = {})
-    return yield unless enabled?
-    
-    cache.fetch(versioned_key(key), opts) do 
-      yield
+      data
     end
+
+
   end
-
-  def self.delete(key, opts = nil)
-    return unless enabled?
-
-    # pp "delete #{key}"
-
-    cache.delete(versioned_key(key), opts)
-  end
-  
-  def self.exist?(name, opts = nil)
-    return unless enabled?
-    cache.exists?(name, opts)
-  end
-
-  def self.clear(opts = nil)
-    return unless enabled?
-    cache.clear(opts)
-  end
-
-  def self.cleanup(opts = nil)
-    return unless enabled?
-    cache.cleanup(opts)
-  end
-
-  def self.increment(name, amount = 1, opts = nil)
-    return unless enabled?
-    cache.increment(name, amount, opts)
-  end
-
-  def self.decrement(name, amount = 1, opts = nil)
-    return unless enabled?
-    cache.decrement(name, amount, opts)
-  end
-
 end

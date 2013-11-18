@@ -1,5 +1,5 @@
 #--
-# Copyright (c) 2010-2013 Michael Berkovich, tr8nhub.com
+# Copyright (c) 2013 Michael Berkovich, tr8nhub.com
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -24,6 +24,7 @@
 require 'logger'
 
 module Tr8n
+
   def self.logger
     @logger ||= begin
       logfile_path = File.expand_path(Tr8n.config.log_path)
@@ -34,47 +35,49 @@ module Tr8n
       Tr8n::Logger.new(logfile)
     end
   end
+
+  class Logger < ::Logger
+
+    def format_message(severity, timestamp, progname, msg)
+      "[#{timestamp.strftime("%D %T")}]: #{"  " * stack.size}#{msg}\n"
+    end
+
+    def add(severity, message = nil, progname = nil, &block)
+      return unless Tr8n.config.enable_logger?
+      super
+    end
+
+    def stack
+      @stack ||= []
+    end
+
+    def trace_api_call(path, params)
+      debug("api: [/#{path}] #{params.inspect}")
+      stack.push(caller)
+      t0 = Time.now
+      if block_given?
+        ret = yield
+      end
+      t1 = Time.now
+      stack.pop
+      debug("call took #{t1 - t0} seconds")
+      ret
+    end
+
+    def trace(message)
+      debug(message)
+      stack.push(caller)
+      t0 = Time.now
+      if block_given?
+        ret = yield
+      end
+      t1 = Time.now
+      stack.pop
+      debug("execution took #{t1 - t0} seconds")
+      ret
+    end
+
+  end
+
 end
 
-class Tr8n::Logger < ::Logger
-
-  def format_message(severity, timestamp, progname, msg)
-    "[#{timestamp.strftime("%D %T")}]: #{"  " * stack.size}#{msg}\n" 
-  end 
-
-  def add(severity, message = nil, progname = nil, &block)
-    return unless Tr8n.config.enable_logger?
-    super
-  end
-
-  def stack
-    @stack ||= []
-  end
-
-  def trace_api_call(path, params) 
-    debug("api: [/#{path}] #{params.inspect}")
-    stack.push(caller)
-    t0 = Time.now
-    if block_given?
-      ret = yield
-    end 
-    t1 = Time.now
-    stack.pop
-    debug("call took #{t1 - t0} seconds")
-    ret
-  end
-
-  def trace(message) 
-    debug(message)
-    stack.push(caller)
-    t0 = Time.now
-    if block_given?
-      ret = yield
-    end 
-    t1 = Time.now
-    stack.pop
-    debug("execution took #{t1 - t0} seconds")
-    ret
-  end
-
-end 

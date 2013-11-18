@@ -22,7 +22,10 @@
 #++
 
 module Tr8nCore
-
+  module Generators
+    module Cache
+    end
+  end
 end
 
 module Tr8n
@@ -34,9 +37,10 @@ module Tr8n
 
   module Decorators
   end
-end
 
-# require 'FileUtils'
+  module CacheAdapters
+  end
+end
 
 [
  "tr8n/base.rb",
@@ -44,8 +48,11 @@ end
  "tr8n/rules_engine",
  "tr8n/tokens",
  "tr8n/decorators",
+ "tr8n/cache",
+ "tr8n/cache/generators",
  "tr8n_core/ext",
  "tr8n_core/modules",
+ "tr8n_core/generators/cache",
 ].each do |f|
   if f.index('.rb')
     file = File.expand_path(File.join(File.dirname(__FILE__), f))

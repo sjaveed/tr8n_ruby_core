@@ -21,11 +21,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-class Tr8n::Decorators::Default < Tr8n::Decorators::Base
-  attributes :language, :translation_key, :label, :options
+class Tr8nCore::Generators::Cache::Cdb < Tr8nCore::Generators::Cache::Base
 
-  def decorate
-    label
-  end
-  
+
 end
