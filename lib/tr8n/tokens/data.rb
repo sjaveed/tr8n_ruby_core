@@ -279,7 +279,7 @@ class Tr8n::Tokens::Data < Tr8n::Base
 
     unless list_options[:expandable]
       result << " " << list_options[:andor].translate("", {}, options) << " "
-      result << "{num} {_others}".translate("List elements joiner",
+      result << "{num|| other}".translate("List elements joiner",
                                             {:num => remaining_ary.size, :_others => "other".pluralize_for(remaining_ary.size)}, options)
       return result
     end

@@ -36,10 +36,14 @@ class Tr8n::LanguageCaseRule < Tr8n::Base
   def gender_variables(object)
     return {} unless conditions.index('@gender')
     return {"@gender" => "unknown"} unless object
-    context = language_case.language.context_by_keyword("gender")
+    context = language_case.language.context_by_keyword(:gender)
     return {"@gender" => "unknown"} unless context
     context.vars(object)
   end
+
+  #######################################################################################################
+  ##  Evaluation Methods
+  #######################################################################################################
 
   def evaluate(value, object = nil)
     return false if conditions.nil?
@@ -68,6 +72,15 @@ class Tr8n::LanguageCaseRule < Tr8n::Base
   #rescue Exception => ex
   #  Tr8n.logger.error("Failed to apply language case rule [case: #{language_case.id}] [rule: #{id}] [conds: #{conditions_expression}] [opers: #{operations_expression}]: #{ex.message}")
   #  value
+  end
+
+  #######################################################################################################
+  ##  Cache Methods
+  #######################################################################################################
+
+  def to_cache_hash(*attrs)
+    return super(attrs) if attrs.any?
+    super(:id, :description, :examples, :conditions, :conditions_expression, :operations, :operations_expression)
   end
 
 end

@@ -52,7 +52,6 @@ class Tr8n::Translation < Tr8n::Base
   #
   # 0 indicates the highest precedence
   #
-
   def calculate_precedence
     self.precedence = 0
     return unless has_context_rules?
@@ -92,6 +91,17 @@ class Tr8n::Translation < Tr8n::Base
     end
     
     true
+  end
+
+
+  #######################################################################################################
+  ##  Cache Methods
+  #######################################################################################################
+
+  def to_cache_hash(*attrs)
+    return super(attrs) if attrs.any?
+
+    super(:label, :context)
   end
 
 end

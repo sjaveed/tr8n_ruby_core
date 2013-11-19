@@ -31,8 +31,8 @@ class Tr8n::LanguageContext < Tr8n::Base
     super
 
     self.attributes[:rules] = {}
-    if hash_value(attrs, 'rules')
-      hash_value(attrs, 'rules').each do |key, rule|
+    if hash_value(attrs, :rules)
+      hash_value(attrs, :rules).each do |key, rule|
         self.attributes[:rules][key] = Tr8n::LanguageContextRule.new(rule.merge(:language_context => self))
       end
     end
@@ -59,6 +59,7 @@ class Tr8n::LanguageContext < Tr8n::Base
     @fallback_rule ||= rules.values.detect{|rule| rule.fallback?}
   end
 
+  # prepare variables for evaluation
   def vars(obj)
     vars = {}
 
@@ -96,6 +97,20 @@ class Tr8n::LanguageContext < Tr8n::Base
       return rule if rule.evaluate(token_vars)
     end
     fallback_rule
+  end
+
+  #######################################################################################################
+  ##  Cache Methods
+  #######################################################################################################
+
+  def to_cache_hash(*attrs)
+    return super(attrs) if attrs.any?
+    hash = super(:keyword, :description, :keys, :default_key, :token_expression, :variables, :token_mapping)
+    hash[:rules] = {}
+    rules.each do |key, rule|
+      hash[:rules][key] = rule.to_cache_hash
+    end
+    hash
   end
 
 end

@@ -43,7 +43,7 @@ module Tr8n
     end
 
     def add(severity, message = nil, progname = nil, &block)
-      return unless Tr8n.config.enable_logger?
+      return unless Tr8n.config.logger_enabled?
       super
     end
 

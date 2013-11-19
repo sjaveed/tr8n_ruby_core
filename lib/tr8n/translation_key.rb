@@ -50,10 +50,6 @@ class Tr8n::TranslationKey < Tr8n::Base
     end
   end
 
-  def self.cache_key(label, description, locale)
-    "t@_[#{locale}]_[#{generate_key(label, description)}]";
-  end
-
   def self.generate_key(label, desc = "")
     "#{Digest::MD5.hexdigest("#{label};;;#{desc}")}~"[0..-2].to_s
   end
@@ -63,9 +59,7 @@ class Tr8n::TranslationKey < Tr8n::Base
   end
 
   def fetch_translations(language, options = {})
-    if self.id and has_translations_for_language?(language)
-      return self
-    end
+    return self if self.id and has_translations_for_language?(language)
 
     if options[:dry] or Tr8n.config.block_options[:dry]
       return application.cache_translation_key(self)
@@ -97,13 +91,9 @@ class Tr8n::TranslationKey < Tr8n::Base
     self.translations[language.locale] = translations
   end
 
-  # adds new language translations for a specific locale
-  def set_translations(language, new_translations)
-    new_translations.each do |t|
-      t.set_translation_key(self)
-    end
-    self.translations[language.locale] = new_translations
-  end
+  ###############################################################
+  ## Translation Methods
+  ###############################################################
 
   def translations_for_language(language)
     return [] unless self.translations
@@ -139,7 +129,7 @@ class Tr8n::TranslationKey < Tr8n::Base
   end
 
   ###############################################################
-  ## Token Substitution
+  ## Token Substitution Methods
   ###############################################################
 
   # Returns an array of decoration tokens from the translation key
@@ -184,6 +174,31 @@ class Tr8n::TranslationKey < Tr8n::Base
     return translated_label unless translated_label.index('[')
     dt = Tr8n::Tokens::DecorationTokenizer.new(translated_label, token_values, :allowed_tokens => decoration_tokens)
     dt.substitute
+  end
+
+  #######################################################################################################
+  ##  Cache Methods
+  #######################################################################################################
+
+  def self.cache_prefix
+    't@'
+  end
+
+  def self.cache_key(label, description, locale)
+    "#{cache_prefix}_[#{locale}]_[#{generate_key(label, description)}]";
+  end
+
+  def to_cache_hash(*attrs)
+    return super(attrs) if attrs.any?
+
+    hash = super(:id, :key, :label, :description, :locale, :level)
+    if translations and translations.any?
+      hash["translations"] = {}
+      translations.each do |locale, locale_translations|
+        hash["translations"][locale] = locale_translations.collect{|t| t.to_cache_hash}
+      end
+    end
+    hash
   end
 
 end

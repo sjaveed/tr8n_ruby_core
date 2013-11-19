@@ -27,7 +27,7 @@ API_PATH = '/tr8n/api/'
 
 class Tr8n::Application < Tr8n::Base
   attributes :host, :key, :secret, :name, :description, :threshold, :translator_level, :version, :updated_at, :default_locale
-  has_many :features, :languages, :translation_keys, :sources, :components, :tokens
+  has_many :features, :languages, :sources, :components, :tokens
 
   def self.init(host, key, secret, options = {})
     options[:definition] = true if options[:definition].nil?
@@ -40,31 +40,146 @@ class Tr8n::Application < Tr8n::Base
 
   def initialize(attrs = {})
     super
+
+    self.attributes[:languages] = []
     if hash_value(attrs, :languages)
       self.attributes[:languages] = hash_value(attrs, :languages).collect{ |l| Tr8n::Language.new(l.merge(:application => self)) }
     end
+
+    self.attributes[:sources] = []
     if hash_value(attrs, :sources)
       self.attributes[:sources] = hash_value(attrs, :sources).collect{ |l| Tr8n::Source.new(l.merge(:application => self)) }
     end
+
+    self.attributes[:components] = []
     if hash_value(attrs, :components)
       self.attributes[:components] = hash_value(attrs, :components).collect{ |l| Tr8n::Component.new(l.merge(:application => self)) }
     end
-  end
 
-  def self.cache_key(key)
-    "a@_[#{key}]"
+    @translation_keys         = {}
+
+    @languages_by_locale      = nil
+    @sources_by_key           = nil
+    @components_by_key        = nil
+    @missing_keys_by_sources  = nil
   end
 
   def language(locale = nil, fetch = true)
-    locale ||= Tr8n.config.default_locale
+    locale ||= default_locale || Tr8n.config.default_locale
 
+    @languages_by_locale ||= {}
     return @languages_by_locale[locale] if @languages_by_locale[locale]
-    #Tr8n::Cache.fetch()
+
+    if Tr8n.config.cache_enabled?
+      language = Tr8n.cache.fetch(Tr8n::Language.cache_key(locale))
+      if language
+        language.application = self
+        @languages_by_locale[locale] = language
+        return language
+      end
+    end
+
     return nil unless fetch
 
     # for translator languages will continue to build application cache
     @languages_by_locale[locale] = get("language", {:locale => locale}, {:class => Tr8n::Language, :attributes => {:application => self}})
+
+    if Tr8n.config.cache_enabled? and not Tr8n.cache.read_only?
+      Tr8n.cache.store(Tr8n::Language.cache_key(locale), @languages_by_locale[locale])
+    end
+
     @languages_by_locale[locale]
+  end
+
+  # Mostly used for testing
+  def add_language(new_language)
+    lang = language(new_language.locale, false)
+    return lang if lang
+
+    new_language.application = self
+    self.languages << new_language
+    @languages_by_locale[new_language.locale] = new_language
+    new_language
+  end
+
+  def source(key, register = true)
+    key = key.source if key.is_a?(Tr8n::Source)
+
+    @sources_by_key ||= begin
+      srcs = {}
+      (sources || []).each do |src|
+        srcs[src.source] = src
+      end
+      srcs
+    end
+
+    return @sources_by_key[key] if @sources_by_key[key]
+    return nil unless register
+
+    @sources_by_key[key] ||= post("source/register", {:source => key}, {:class => Tr8n::Source, :attributes => {:application => self}})
+  end
+
+  def component(key, register = true)
+    key = key.key if key.is_a?(Tr8n::Component)
+
+    @components_by_key ||= begin
+      cmps = {}
+      (components || []).each do |cmp|
+        cmps[cmp.key] = cmp
+      end
+      cmps
+    end
+
+    return @components_by_key[key] if @components_by_key[key]
+    return nil unless register
+
+    @components_by_key[key] ||= post("component/register", {:component => key}, {:class => Tr8n::Component, :attributes => {:application => self}})
+  end
+
+  def translation_keys
+    @translation_keys ||= {}
+  end
+
+  def translation_key(key)
+    translation_keys[key]
+  end
+
+  def cache_translation_key(tkey)
+    cached_key = translation_key(tkey.key)
+
+    if cached_key
+      # move translations from tkey to the cached key
+      tkey.translations.each do |locale, translations|
+        cached_key.set_language_translations(language(locale), translations)
+      end
+      return cached_key
+    end
+
+    tkey.set_application(self)
+    @translation_keys[tkey.key] = tkey
+  end
+
+  def cache_translation_keys(tkeys)
+    tkeys.each do |tkey|
+      cache_translation_key(tkey)
+    end
+  end
+
+  def register_missing_key(tkey, source)
+    @missing_keys_by_sources ||= {}
+    @missing_keys_by_sources[source.source] ||= {}
+    @missing_keys_by_sources[source.source][tkey.key] ||= tkey
+  end
+
+  def submit_missing_keys
+    return if @missing_keys_by_sources.nil? or @missing_keys_by_sources.empty?
+    params = []
+    @missing_keys_by_sources.each do |source, keys|
+      params << {:source => source, :keys => keys.values.collect{|tkey| tkey.to_api_hash(:label, :description, :locale, :level)}}
+      #source(source).reset
+    end
+    post('source/register_keys', {:source_keys => params.to_json}, :method => :post)
+    @missing_keys_by_sources = nil
   end
 
   def update_cache_version
@@ -72,7 +187,8 @@ class Tr8n::Application < Tr8n::Base
     return if updated_at and updated_at > (Time.now - 1.hour)
     
     # version = get("application/version")
-    # Tr8n::Cache.set_version(version)
+    # Tr8n.cache.set_version(version)
+    # updated_at = Time.now
   end
 
   def reset!
@@ -83,16 +199,8 @@ class Tr8n::Application < Tr8n::Base
     super
   end
 
-  def add_language(lang)
-    @languages_by_locale ||= {}
-    return if @languages_by_locale[lang.locale]
-    
-    lang.application = self
-    @languages_by_locale[lang.locale] = lang
-  end
-
   def featured_languages
-    @featured_languages ||= get("application/featured_locales").collect{ |locale| language(locale) }
+    get("application/featured_locales").collect{ |locale| language(locale) }
   end
  
   def translators
@@ -107,78 +215,35 @@ class Tr8n::Application < Tr8n::Base
     hash_value(tokens, "data.#{token.to_s}")
   end
 
-  def source_by_key(key)
-    key = key.source if key.is_a?(Tr8n::Source)
-    @sources_by_key ||= begin
-      srcs = {}
-      (sources || []).each do |src|
-        srcs[src.source] = src
-      end
-      srcs
-    end
-    @sources_by_key[key] ||= post("source/register", {:source => key}, {:class => Tr8n::Source, :attributes => {:application => self}})
-  end
-
-  def component_by_key(key)
-    key = key.key if key.is_a?(Tr8n::Component)
-    @components_by_key ||= begin
-      cmps = {}
-      components.each do |cmp|      
-        cmps[cmp.key] = cmp
-      end
-      cmps
-    end
-    @components_by_key[key] ||= post("component/register", {:component => key}, {:class => Tr8n::Component, :attributes => {:application => self}})
-  end
-
-  def translation_keys
-    self.attributes[:translation_keys] ||= {}
-  end
-
-  def traslation_key_by_key(key)
-    translation_keys[key]
-  end
-
-  def cache_translation_key(tkey)
-    cached_key = traslation_key_by_key(tkey.key)
-
-    if cached_key
-      # move translations from tkey to the cached key
-      tkey.translations.each do |locale, translations|
-        cached_key.set_language_translations(language(locale), translations)
-      end
-      return cached_key
-    end
-
-    self.translation_keys[tkey.key] = tkey.set_application(self)
-    tkey
-  end
-
-  def cache_translation_keys(tkeys)
-    tkeys.each do |tkey|
-      cache_translation_key(tkey)
-    end
-  end
-
-  def register_missing_key(tkey, source)    
-    @missing_keys_by_sources ||= {}
-    @missing_keys_by_sources[source.source] ||= {}
-    @missing_keys_by_sources[source.source][tkey.key] ||= tkey
-  end
-
-  def submit_missing_keys
-    return if @missing_keys_by_sources.nil? or @missing_keys_by_sources.empty?
-    params = []
-    @missing_keys_by_sources.each do |source, keys|
-      params << {:source => source, :keys => keys.values.collect{|tkey| tkey.to_api_hash(:label, :description, :locale, :level)}}
-      source_by_key(source).reset
-    end 
-    post('source/register_keys', {:source_keys => params.to_json}, :method => :post)
-    @missing_keys_by_sources = nil
+  def js_boot_url
+    "#{host}/tr8n/api/proxy/boot.js?client_id=#{key}"
   end
 
   def feature_enabled?(key)
     hash_value(features, key.to_s)
+  end
+
+  #######################################################################################################
+  ##  Cache Methods
+  #######################################################################################################
+
+  def self.cache_prefix
+    'a@'
+  end
+
+  def self.cache_key(key)
+    "#{cache_prefix}_[#{key}]"
+  end
+
+  def to_cache_hash(*attrs)
+    return super(attrs) if attrs.any?
+
+    hash = super(:host, :name, :description)
+    hash["languages"] = []
+    languages.each do |lang|
+      hash["languages"] << lang.to_cache_hash(:locale, :name, :english_name, :native_name, :right_to_left, :flag_url)
+    end
+    hash
   end
 
   #######################################################################################################

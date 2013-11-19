@@ -5,7 +5,7 @@ require 'helper'
 describe Tr8n::Application do
   describe "#configuration" do
     it "sets class attributes" do
-      expect(Tr8n::Application.attributes).to eq([:host, :key, :secret, :name, :description, :threshold, :translator_level, :version, :updated_at, :default_locale, :features, :languages, :translation_keys, :sources, :components, :tokens])
+      expect(Tr8n::Application.attributes).to eq([:host, :key, :secret, :name, :description, :threshold, :translator_level, :version, :updated_at, :default_locale, :features, :languages, :sources, :components, :tokens])
     end
   end
 

@@ -33,7 +33,7 @@ module Tr8n
             # McCarthy's Elementary S-functions and Predicates
             'label'   => lambda { |l, r|      @env[l] = @vars[l] = r },
             'quote'   => lambda { |expr|      expr },
-            'car'     => lambda { |list|      list[0] },
+            'car'     => lambda { |list|      list[1] },
             'cdr'     => lambda { |list|      list.drop(1) },
             'cons'    => lambda { |e, cell|   [e] + cell },
             'eq'      => lambda { |l, r|      l == r },

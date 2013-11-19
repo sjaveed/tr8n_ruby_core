@@ -26,16 +26,14 @@ class Tr8n::LanguageCase < Tr8n::Base
   attributes  :keyword, :latin_name, :native_name, :description, :application
   has_many    :rules
 
+  TR8N_HTML_TAGS_REGEX = /<\/?[^>]*>/
+
   def initialize(attrs = {})
     super
     self.attributes[:rules] = []
     if hash_value(attrs, :rules)
       self.attributes[:rules] = hash_value(attrs, :rules).collect{ |rule| Tr8n::LanguageCaseRule.new(rule.merge(:language_case => self)) }
     end
-  end
-
-  def html_tag_expression
-    /<\/?[^>]*>/
   end
 
   def find_matching_rule(value, object = nil)
@@ -45,12 +43,16 @@ class Tr8n::LanguageCase < Tr8n::Base
     nil
   end
 
+  #######################################################################################################
+  ##  Evaluation Methods
+  #######################################################################################################
+
   def apply(value, object = nil, options = {})
     value = value.to_s
-    html_tokens = value.scan(html_tag_expression).uniq
-    sanitized_value = value.gsub(html_tag_expression, "")
+    html_tokens = value.scan(TR8N_HTML_TAGS_REGEX).uniq
+    sanitized_value = value.gsub(TR8N_HTML_TAGS_REGEX, "")
 
-    if application == 'phrase'
+    if application.to_sym == :phrase
       words = [sanitized_value]
     else
       words = sanitized_value.split(/[\s\/\\]/).uniq
@@ -86,12 +88,31 @@ class Tr8n::LanguageCase < Tr8n::Base
     value
   end
 
+  #######################################################################################################
+  ##  Decoration Methods - TODO: move to decorators
+  #######################################################################################################
+
   def decorate(word, case_value, case_rule, options = {})
     return case_value if options[:skip_decorations]
     return case_value if language.default?
     return case_value unless Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
 
     "<span class='tr8n_language_case' data-case_id='#{id}' data-rule_id='#{case_rule ? case_rule.id : ''}' data-case_key='#{word.gsub("'", "\'")}'>#{case_value}</span>"
+  end
+
+  #######################################################################################################
+  ##  Cache Methods
+  #######################################################################################################
+
+  def to_cache_hash(*attrs)
+    return super(attrs) if attrs.any?
+
+    hash = super(:id, :keyword, :description, :latin_name, :native_name)
+    hash["rules"] = []
+    rules.each do |rule|
+      hash["rules"] << rule.to_cache_hash
+    end
+    hash
   end
 
 end

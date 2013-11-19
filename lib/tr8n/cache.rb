@@ -81,23 +81,29 @@ module Tr8n
     end
 
     def serialize_object(key, data)
-      unless ['a@', 'l@', 's@', 'c@'].include?(key[0..1])
+      unless [Tr8n::Application.cache_prefix,
+              Tr8n::Language.cache_prefix,
+              Tr8n::Source.cache_prefix,
+              Tr8n::Component.cache_prefix,
+              Tr8n::TranslationKey.cache_prefix].include?(key[0..1])
         return data
       end
 
-      data.to_json
+      data.to_cache_hash.to_json
     end
 
     def deserialize_object(key, data)
       case key[0..1]
-        when 'a@'
-          return Tr8n::Application(JSON.parse(data))
-        when 'l@'
-          return Tr8n::Language(JSON.parse(data).merge(:application => Tr8n.config.application))
-        when 's@'
-          return Tr8n::Source(JSON.parse(data).merge(:application => Tr8n.config.application))
-        when 'c@'
-          return Tr8n::Component(JSON.parse(data).merge(:application => Tr8n.config.application))
+        when Tr8n::Application.cache_prefix
+          return Tr8n::Application.new(JSON.parse(data))
+        when Tr8n::Language.cache_prefix
+          return Tr8n::Language.new(JSON.parse(data).merge(:application => Tr8n.config.application))
+        when Tr8n::Source.cache_prefix
+          return Tr8n::Source.new(JSON.parse(data).merge(:application => Tr8n.config.application))
+        when Tr8n::Component.cache_prefix
+          return Tr8n::Component.new(JSON.parse(data).merge(:application => Tr8n.config.application))
+        when Tr8n::TranslationKey.cache_prefix
+          return Tr8n::TranslationKey.new(JSON.parse(data).merge(:application => Tr8n.config.application))
       end
 
       data

@@ -24,7 +24,7 @@
 class Tr8n::Component < Tr8n::Base
   belongs_to :application
   attributes :key, :name, :description, :state
-  
+
   def sources
     application.get("component/sources", {:key => key}, {:class => Tr8n::Source, :application => application})
   end
@@ -54,4 +54,15 @@ class Tr8n::Component < Tr8n::Base
     translators.include?(translator)
   end
 
+  #######################################################################################################
+  ##  Cache Methods
+  #######################################################################################################
+
+  def self.cache_prefix
+    'c@'
+  end
+
+  def self.cache_key(key)
+    "#{cache_prefix}_[#{key}]"
+  end
 end

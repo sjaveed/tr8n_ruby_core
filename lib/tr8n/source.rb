@@ -44,17 +44,13 @@ class Tr8n::Source < Tr8n::Base
     super
 
     self.translation_keys = nil
-    if attrs["translation_keys"]
+    if hash_value(attrs, :translation_keys)
       self.translation_keys = {}
-      attrs["translation_keys"].each do |tk|
+      hash_value(attrs, :translation_keys).each do |tk|
         tkey = Tr8n::TranslationKey.new(tk.merge(:application => application))
         self.translation_keys[tkey.key] = application.cache_translation_key(tkey)
       end
     end
-  end
-
-  def self.cache_key(source_key, locale)
-    "s@_[#{locale}]_[#{source_key}]"
   end
 
   def fetch_translations_for_language(language, options = {})
@@ -70,7 +66,32 @@ class Tr8n::Source < Tr8n::Base
       self.translation_keys[tkey.key] = application.cache_translation_key(tkey)
     end
 
-    self.translation_keys
+    translation_keys
+  end
+
+  #######################################################################################################
+  ##  Cache Methods
+  #######################################################################################################
+
+  def self.cache_prefix
+    's@'
+  end
+
+  def self.cache_key(source_key, locale)
+    "#{cache_prefix}_[#{locale}]_[#{source_key}]"
+  end
+
+  def to_cache_hash(*attrs)
+    return super(attrs) if attrs.any?
+
+    hash = super(:source, :url, :name, :description)
+    if translation_keys and translation_keys.any?
+      hash[:translation_keys] = {}
+      translation_keys.values.each do |tkey|
+        hash[:translation_keys] = tkey.to_cache_hash
+      end
+    end
+    hash
   end
 
 end

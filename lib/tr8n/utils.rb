@@ -24,6 +24,8 @@
 require 'yaml'
 require 'base64'
 require 'openssl'
+require 'json'
+
 module Tr8n
   class Utils
     def self.normalize_tr_params(label, description, tokens, options)
@@ -66,7 +68,7 @@ module Tr8n
     end
 
     def self.load_json(file_path)
-      JSON.parse("#{root}#{file_path}")
+      JSON.parse(File.read("#{root}#{file_path}"))
     end
 
     def self.load_yml(file_path)

@@ -21,8 +21,6 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'json'
-
 module Tr8n
 
   def self.config
@@ -37,7 +35,7 @@ module Tr8n
   # Acts as a global singleton that holds all Tr8n configuration
   # The class can be extended with a different implementation, as long as the interface is supported
   class Config < Tr8n::Base
-    thread_safe_attributes :application, :default_locale
+    thread_safe_attributes :application
     thread_safe_attributes :current_user, :current_language, :current_translator, :current_source, :current_component, :current_translation_keys
     thread_safe_attributes :block_options
 
@@ -45,36 +43,40 @@ module Tr8n
       @root ||= File.expand_path(File.join(File.dirname(__FILE__), '..', '..'))
     end
 
+    def defaults
+      @defaults ||= Tr8n::Utils.load_json("#{@root}/config/config.json")
+    end
+
     def enabled?
-      true
+      hash_value(defaults, "enabled")
     end
 
     def disabled?
       not enabled?
     end
 
-    def enable_logger?
-      false
+    def logger_enabled?
+      hash_value(defaults, "logger.enabled")
     end
 
     def log_path
-      "#{root}/log/tr8n.log"
-    end
-
-    def cache_path
-      "#{root}/cache"
+      "#{root}#{hash_value(defaults, "logger.path")}"
     end
 
     def cache_enabled?
-      false
+      hash_value(defaults, "cache.enabled")
+    end
+
+    def cache_path
+      "#{root}#{hash_value(defaults, "cache.path")}"
     end
 
     def cache_adapter
-      :file
+      hash_value(defaults, "cache.adapter")
     end
 
     def cache_version
-      1
+      hash_value(defaults, "cache.version")
     end
 
     def init_application(host, app_key, app_secret)
@@ -100,7 +102,7 @@ module Tr8n
     end
 
     def context_rules
-      {
+      @context_rules ||= {
           "number" => {
               "variables" => {
               }
@@ -132,17 +134,26 @@ module Tr8n
       }
     end
 
+    def default_locale
+      return application.default_locale if application
+      hash_value(defaults, "default_locale")
+    end
+
+    def default_level
+      0
+    end
+
     def default_data_tokens
-      @default_data_tokens ||= Tr8n::Utils.load_yml("/config/tokens/data.yml")
+      @default_data_tokens ||= Tr8n::Utils.load_yml("#{@root}/config/tokens/data.yml")
     end
 
     def default_decoration_tokens
-      @default_decoration_tokens ||= Tr8n::Utils.load_yml("/config/tokens/decorations.yml")
+      @default_decoration_tokens ||= Tr8n::Utils.load_yml("#{@root}/config/tokens/decorations.yml")
     end
 
     def default_token_value(token_name, type = :data, format = 'html')
-      return default_data_tokens[format.to_s][token_name.to_s] if type == :data
-      return default_decoration_tokens[format.to_s][token_name.to_s] if type == :decoration
+      return default_data_tokens[format.to_s][token_name.to_s] if type.to_sym == :data
+      return default_decoration_tokens[format.to_s][token_name.to_s] if type.to_sym == :decoration
     end
 
   end

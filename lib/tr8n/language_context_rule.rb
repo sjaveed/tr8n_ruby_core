@@ -26,12 +26,16 @@ class Tr8n::LanguageContextRule < Tr8n::Base
   attributes  :keyword, :description, :examples, :conditions, :conditions_expression
 
   def fallback?
-    keyword.to_s == 'other'
+    keyword.to_s.to_sym == :other
   end
 
   def conditions_expression
     self.attributes[:conditions_expression] ||= Tr8n::RulesEngine::Parser.new(conditions).parse
   end
+
+  #######################################################################################################
+  ##  Evaluation Methods
+  #######################################################################################################
 
   def evaluate(vars = {})
     return true if fallback?
@@ -45,6 +49,15 @@ class Tr8n::LanguageContextRule < Tr8n::Base
   #rescue Exception => ex
   #  Tr8n.logger.error("Failed to evaluate settings context rule #{conditions_expression}: #{ex.message}")
   #  false
+  end
+
+  #######################################################################################################
+  ##  Cache Methods
+  #######################################################################################################
+
+  def to_cache_hash(*attrs)
+    return super(attrs) if attrs.any?
+    super(:keyword, :description, :examples, :conditions, :conditions_expression)
   end
 
 end
