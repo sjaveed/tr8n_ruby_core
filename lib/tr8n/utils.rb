@@ -71,7 +71,7 @@ module Tr8n
       JSON.parse(File.read("#{root}#{file_path}"))
     end
 
-    def self.load_yml(file_path)
+    def self.load_yaml(file_path)
       YAML.load_file("#{root}#{file_path}")
     end
 

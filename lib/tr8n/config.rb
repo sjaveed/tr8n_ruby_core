@@ -44,11 +44,11 @@ module Tr8n
     end
 
     def defaults
-      @defaults ||= Tr8n::Utils.load_json("#{@root}/config/config.json")
+      @defaults ||= Tr8n::Utils.load_yaml("#{@root}/config/config.yml")
     end
 
     def enabled?
-      hash_value(defaults, "enabled")
+      hash_value(defaults, "tr8n.enabled")
     end
 
     def disabled?
@@ -56,27 +56,27 @@ module Tr8n
     end
 
     def logger_enabled?
-      hash_value(defaults, "logger.enabled")
+      hash_value(defaults, "tr8n.logger.enabled")
     end
 
     def log_path
-      "#{root}#{hash_value(defaults, "logger.path")}"
+      "#{root}#{hash_value(defaults, "tr8n.logger.path")}"
     end
 
     def cache_enabled?
-      hash_value(defaults, "cache.enabled")
+      hash_value(defaults, "tr8n.cache.enabled")
     end
 
     def cache_path
-      "#{root}#{hash_value(defaults, "cache.path")}"
+      "#{root}#{hash_value(defaults, "tr8n.cache.path")}"
     end
 
     def cache_adapter
-      hash_value(defaults, "cache.adapter")
+      hash_value(defaults, "tr8n.cache.adapter")
     end
 
     def cache_version
-      hash_value(defaults, "cache.version")
+      hash_value(defaults, "tr8n.cache.version")
     end
 
     def init_application(host, app_key, app_secret)
@@ -136,7 +136,7 @@ module Tr8n
 
     def default_locale
       return application.default_locale if application
-      hash_value(defaults, "default_locale")
+      hash_value(defaults, "tr8n.default_locale")
     end
 
     def default_level
@@ -144,14 +144,14 @@ module Tr8n
     end
 
     def default_data_tokens
-      @default_data_tokens ||= Tr8n::Utils.load_yml("#{@root}/config/tokens/data.yml")
+      @default_data_tokens ||= Tr8n::Utils.load_yaml("#{@root}/config/tokens/data.yml")
     end
 
     def default_decoration_tokens
-      @default_decoration_tokens ||= Tr8n::Utils.load_yml("#{@root}/config/tokens/decorations.yml")
+      @default_decoration_tokens ||= Tr8n::Utils.load_yaml("#{@root}/config/tokens/decorations.yml")
     end
 
-    def default_token_value(token_name, type = :data, format = 'html')
+    def default_token_value(token_name, type = :data, format = :html)
       return default_data_tokens[format.to_s][token_name.to_s] if type.to_sym == :data
       return default_decoration_tokens[format.to_s][token_name.to_s] if type.to_sym == :decoration
     end
