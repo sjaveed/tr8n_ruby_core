@@ -55,9 +55,8 @@ class Tr8n::LanguageContextRule < Tr8n::Base
   ##  Cache Methods
   #######################################################################################################
 
-  def to_cache_hash(*attrs)
-    return super(attrs) if attrs.any?
-    super(:keyword, :description, :examples, :conditions, :conditions_expression)
+  def to_cache_hash
+    to_hash(:keyword, :description, :examples, :conditions, :conditions_expression)
   end
 
 end

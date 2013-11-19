@@ -37,24 +37,24 @@ Using context:
 
 Basic numeric rules with transform tokens:
 
-  irb(main):006:0> russian.translate('You have {count||message}.', nil, :count => 1)
+  irb(main):006:0> russian.translate('You have {count||message}.', :count => 1)
   => "У вас есть 1 сообщение."
-  irb(main):007:0> russian.translate('You have {count||message}.', nil, :count => 2)
+  irb(main):007:0> russian.translate('You have {count||message}.', :count => 2)
   => "У вас есть 2 сообщения."
-  irb(main):008:0> russian.translate('You have {count||message}.', nil, :count => 5)
+  irb(main):008:0> russian.translate('You have {count||message}.', :count => 5)
   => "У вас есть 5 сообщений."
 
 Basic gender rules with language cases:
 
   irb(main):009:0> actor = {:gender => :female, :name => "Анна"}
   irb(main):010:0> target = {:gender => :male, :name => "Михаил"}
-  irb(main):011:0> russian.translate('{actor} sent {target::dat} a gift.', nil, :actor => {:object => actor, :attribute => :name}, :target => {:object => target, :attribute => :name})
+  irb(main):011:0> russian.translate('{actor} sent {target::dat} a gift.', :actor => {:object => actor, :attribute => :name}, :target => {:object => target, :attribute => :name})
   => "Анна послала подарок Михаилу."
-  irb(main):011:0> russian.translate('{actor} sent {target::dat} a gift.', nil, :actor => {:object => target, :attribute => :name}, :target => {:object => actor, :attribute => :name})
+  irb(main):011:0> russian.translate('{actor} sent {target::dat} a gift.', :actor => {:object => target, :attribute => :name}, :target => {:object => actor, :attribute => :name})
   => "Михаил послал подарок Анне."
 
 == Tr8n
 
-To read more about TML (Translation Markup Language) syntax that Tr8n uses, please visit github.com/tr8n/tr8n 
+To read more about TML (Translation Markup Language) syntax that Tr8n uses, please visit http://wiki.tr8nhub.com
 
 If you are planning to use Tr8n in Rails application, you can use the tr8n_rails_client_sdk gem instead.

@@ -104,10 +104,8 @@ class Tr8n::LanguageCase < Tr8n::Base
   ##  Cache Methods
   #######################################################################################################
 
-  def to_cache_hash(*attrs)
-    return super(attrs) if attrs.any?
-
-    hash = super(:id, :keyword, :description, :latin_name, :native_name)
+  def to_cache_hash
+    hash = to_hash(:id, :keyword, :description, :latin_name, :native_name)
     hash["rules"] = []
     rules.each do |rule|
       hash["rules"] << rule.to_cache_hash

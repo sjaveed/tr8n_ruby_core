@@ -103,9 +103,8 @@ class Tr8n::LanguageContext < Tr8n::Base
   ##  Cache Methods
   #######################################################################################################
 
-  def to_cache_hash(*attrs)
-    return super(attrs) if attrs.any?
-    hash = super(:keyword, :description, :keys, :default_key, :token_expression, :variables, :token_mapping)
+  def to_cache_hash
+    hash = to_hash(:keyword, :description, :keys, :default_key, :token_expression, :variables, :token_mapping)
     hash[:rules] = {}
     rules.each do |key, rule|
       hash[:rules][key] = rule.to_cache_hash

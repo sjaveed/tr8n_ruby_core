@@ -93,15 +93,12 @@ class Tr8n::Translation < Tr8n::Base
     true
   end
 
-
   #######################################################################################################
   ##  Cache Methods
   #######################################################################################################
 
-  def to_cache_hash(*attrs)
-    return super(attrs) if attrs.any?
-
-    super(:label, :context)
+  def to_cache_hash
+    to_hash(:label, :context)
   end
 
 end

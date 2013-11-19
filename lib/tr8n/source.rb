@@ -81,10 +81,8 @@ class Tr8n::Source < Tr8n::Base
     "#{cache_prefix}_[#{locale}]_[#{source_key}]"
   end
 
-  def to_cache_hash(*attrs)
-    return super(attrs) if attrs.any?
-
-    hash = super(:source, :url, :name, :description)
+  def to_cache_hash
+    hash = to_hash(:source, :url, :name, :description)
     if translation_keys and translation_keys.any?
       hash[:translation_keys] = {}
       translation_keys.values.each do |tkey|

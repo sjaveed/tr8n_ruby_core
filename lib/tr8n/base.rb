@@ -96,7 +96,7 @@ class Tr8n::Base
     end
   end
 
-  def to_cache_hash(*attrs)
+  def to_hash(*attrs)
     if attrs.nil? or attrs.empty?
       # default hashing only includes basic types
       keys = []

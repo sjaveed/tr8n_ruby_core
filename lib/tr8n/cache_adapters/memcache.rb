@@ -27,7 +27,7 @@ class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
 
   def initialize
     options = { :namespace => "tr8n", :compress => true }
-    @cache = Dalli::Client.new('localhost:11211', options)
+    @cache = Dalli::Client.new(Tr8n.config.cache_host, options)
   end
 
   def read_only?

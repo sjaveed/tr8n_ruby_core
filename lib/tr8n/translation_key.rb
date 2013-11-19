@@ -118,14 +118,17 @@ class Tr8n::TranslationKey < Tr8n::Base
     end
 
     translation = find_first_valid_translation(language, token_values)
+    decorator = Tr8n::Decorators::Base.decorator
 
     if translation
       translated_label = substitute_tokens(translation.label, token_values, translation.language, options)
-      return Tr8n::Decorators::Base.decorator(self, translation.language, translated_label, options.merge(:translated => true)).decorate
+      return decorator.decorate(self, translation.language, translated_label, options.merge(:translated => true))
     end
 
+    #Tr8n.logger.info("Translating: #{label}")
+
     translated_label = substitute_tokens(label, token_values, self.attributes[:language], options)
-    Tr8n::Decorators::Base.decorator(self, self.attributes[:language], translated_label, options.merge(:translated => false)).decorate
+    decorator.decorate(self, self.attributes[:language], translated_label, options.merge(:translated => false))
   end
 
   ###############################################################
@@ -188,10 +191,8 @@ class Tr8n::TranslationKey < Tr8n::Base
     "#{cache_prefix}_[#{locale}]_[#{generate_key(label, description)}]";
   end
 
-  def to_cache_hash(*attrs)
-    return super(attrs) if attrs.any?
-
-    hash = super(:id, :key, :label, :description, :locale, :level)
+  def to_cache_hash
+    hash = to_hash(:id, :key, :label, :description, :locale, :level)
     if translations and translations.any?
       hash["translations"] = {}
       translations.each do |locale, locale_translations|

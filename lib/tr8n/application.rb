@@ -31,11 +31,25 @@ class Tr8n::Application < Tr8n::Base
 
   def self.init(host, key, secret, options = {})
     options[:definition] = true if options[:definition].nil?
+
+    Tr8n.logger.info("Initializing application...")
+
+    if Tr8n.config.cache_enabled?
+      Tr8n.config.application = Tr8n.cache.fetch(cache_key(key))
+      return Tr8n.config.application if Tr8n.config.application
+    end
+
     Tr8n.config.application = api("application", {:client_id => key, :definition => options[:definition]}, {:host => host, :client_secret => secret, :class => Tr8n::Application, :attributes => {
       :host => host, 
       :key => key,
       :secret => secret
-    }})   
+    }})
+
+    if Tr8n.config.cache_enabled?
+      Tr8n.cache.store(cache_key(key), Tr8n.config.application)
+    end
+
+    Tr8n.config.application
   end
 
   def initialize(attrs = {})
@@ -89,6 +103,10 @@ class Tr8n::Application < Tr8n::Base
     end
 
     @languages_by_locale[locale]
+  end
+
+  def locales
+    @locales ||= languages.collect{|lang| lang.locale}
   end
 
   # Mostly used for testing
@@ -175,8 +193,7 @@ class Tr8n::Application < Tr8n::Base
     return if @missing_keys_by_sources.nil? or @missing_keys_by_sources.empty?
     params = []
     @missing_keys_by_sources.each do |source, keys|
-      params << {:source => source, :keys => keys.values.collect{|tkey| tkey.to_api_hash(:label, :description, :locale, :level)}}
-      #source(source).reset
+      params << {:source => source, :keys => keys.values.collect{|tkey| tkey.to_hash(:label, :description, :locale, :level)}}
     end
     post('source/register_keys', {:source_keys => params.to_json}, :method => :post)
     @missing_keys_by_sources = nil
@@ -189,14 +206,6 @@ class Tr8n::Application < Tr8n::Base
     # version = get("application/version")
     # Tr8n.cache.set_version(version)
     # updated_at = Time.now
-  end
-
-  def reset!
-    # @languages_by_locale = nil
-    # @sources_by_key = nil
-    # @components_by_key = nil
-    # @featured_languages = nil
-    super
   end
 
   def featured_languages
@@ -235,13 +244,11 @@ class Tr8n::Application < Tr8n::Base
     "#{cache_prefix}_[#{key}]"
   end
 
-  def to_cache_hash(*attrs)
-    return super(attrs) if attrs.any?
-
-    hash = super(:host, :name, :description, :threshold, :default_locale, :default_level)
+  def to_cache_hash
+    hash = to_hash(:host, :name, :description, :threshold, :default_locale, :default_level)
     hash["languages"] = []
     languages.each do |lang|
-      hash["languages"] << lang.to_cache_hash(:locale, :name, :english_name, :native_name, :right_to_left, :flag_url)
+      hash["languages"] << lang.to_hash(:locale, :name, :english_name, :native_name, :right_to_left, :flag_url)
     end
     hash
   end

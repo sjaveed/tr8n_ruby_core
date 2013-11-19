@@ -78,9 +78,8 @@ class Tr8n::LanguageCaseRule < Tr8n::Base
   ##  Cache Methods
   #######################################################################################################
 
-  def to_cache_hash(*attrs)
-    return super(attrs) if attrs.any?
-    super(:id, :description, :examples, :conditions, :conditions_expression, :operations, :operations_expression)
+  def to_cache_hash
+    to_hash(:id, :description, :examples, :conditions, :conditions_expression, :operations, :operations_expression)
   end
 
 end

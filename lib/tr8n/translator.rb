@@ -21,6 +21,8 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require 'digest/md5'
+
 class Tr8n::Translator < Tr8n::Base
   belongs_to :application
   attributes :id, :name, :email, :gender, :mugshot, :link, :inline, :features
@@ -48,7 +50,13 @@ class Tr8n::Translator < Tr8n::Base
 
   def feature_enabled?(key)
     return false unless features
-    features[key]
+    hash_value(features, key)
+  end
+
+  def mugshot_url
+    return nil unless email
+    gravatar_id = Digest::MD5.hexdigest(email.downcase)
+    "http://gravatar.com/avatar/#{gravatar_id}.png?s=48"
   end
 
 end

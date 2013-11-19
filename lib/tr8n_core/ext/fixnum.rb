@@ -21,15 +21,19 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-class Tr8n::Decorators::Base < Tr8n::Base
+class Fixnum
 
-  def self.decorator
-    # can alternate based on the format in the config
-    Tr8n.config.decorator_class.new
+  def with_leading_zero
+    (to_i < 10 ? "0#{to_s}" : to_s)
   end
 
-  def decorate(translation_key, language, label, options = {})
-    raise Tr8n::Exception.new("Must be implemented by the extending class")
+  def translate(desc = "", tokens = {}, options = {}, language = Tr8n.config.current_language)
+    to_s.translate(desc, tokens, options, language)
+  end
+  alias tr translate
+  
+  def trl(desc = "", tokens = {}, options = {}, language = Tr8n.config.current_language)
+    to_s.trl(desc, tokens, options, language)
   end
 
 end

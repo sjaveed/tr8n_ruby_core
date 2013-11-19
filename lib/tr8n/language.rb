@@ -84,47 +84,58 @@ class Tr8n::Language < Tr8n::Base
   end
 
   #######################################################################################################
-  ##  Translation Methods
-  ##
-  ##  Note - when inline translation mode is enable, cache will not be used and translators will
-  ##  always hit the live service to get the most recent translations
-  ##
-  ##  Some cache adapters cache by source, others by key. Some are read-only, some are built on the fly.
-  #######################################################################################################
+  # Translation Methods
+  #
+  # Note - when inline translation mode is enable, cache will not be used and translators will
+  # always hit the live service to get the most recent translations
+  #
+  # Some cache adapters cache by source, others by key. Some are read-only, some are built on the fly.
+  #
+  # There are three ways to call the tr method
+  #
+  # tr(label, description = "", tokens = {}, options = {})
+  # or
+  # tr(label, tokens = {}, options = {})
+  # or
+  # tr(:label => label, :description => "", :tokens => {}, :options => {})
+  ########################################################################################################
 
-  def translate(label, description = "", tokens = {}, options = {})
-    locale = options[:locale] || Tr8n.config.block_options[:locale] || Tr8n.config.default_locale
-    level = options[:level] || Tr8n.config.block_options[:level] || Tr8n.config.default_level
+  def translate(label, description = nil, tokens = {}, options = {})
+    return label if label.tr8n_translated?
+
+    params = Tr8n::Utils.normalize_tr_params(label, description, tokens, options)
+    locale = params[:options][:locale] || Tr8n.config.block_options[:locale] || Tr8n.config.default_locale
+    level = params[:options][:level] || Tr8n.config.block_options[:level] || Tr8n.config.default_level
 
     temp_key = Tr8n::TranslationKey.new({
         :application  => application,
-        :label        => label,
-        :description  => description,
+        :label        => params[:label],
+        :description  => params[:description],
         :locale       => locale,
         :level        => level,
         :translations => []
     })
 
     unless Tr8n.config.enabled?
-      return temp_key.substitute_tokens(label, tokens, self, options).tr8n_translated
+      return temp_key.substitute_tokens(params[:label], params[:tokens], self, params[:options]).tr8n_translated
     end
 
-    tokens.merge!(:viewing_user => Tr8n.config.current_user)
+    params[:tokens].merge!(:viewing_user => Tr8n.config.current_user)
 
     translation_key = application.translation_key(temp_key.key)
     if translation_key
-      return translation_key.translate(self, tokens, options)
+      return translation_key.translate(self, params[:tokens], params[:options])
     end
 
     if Tr8n.config.cache_enabled? and Tr8n.config.current_translator? and Tr8n.config.current_translator.inline?
-      return translate_from_cache(temp_key, tokens, options)
+      return translate_from_cache(temp_key, params[:tokens], params[:options]).tr8n_translated
     end
 
-    translate_from_service(temp_key, tokens, options)
+    translate_from_service(temp_key, params[:tokens], params[:options]).tr8n_translated
   rescue Exception => ex
-    Tr8n.logger.error("Failed to translate: #{label} : #{ex.message}")
+    Tr8n.logger.error("Failed to translate: #{params[:label]} : #{ex.message}")
     Tr8n.logger.error(ex.backtrace)
-    label
+    params[:label]
   end
 
   def translate_from_cache(translation_key, tokens, options)
@@ -217,10 +228,8 @@ class Tr8n::Language < Tr8n::Base
     "#{cache_prefix}_[#{locale}]"
   end
 
-  def to_cache_hash(*attrs)
-    return super(attrs) if attrs.any?
-
-    hash = super(:locale, :name, :english_name, :native_name, :right_to_left, :flag_url)
+  def to_cache_hash
+    hash = to_hash(:locale, :name, :english_name, :native_name, :right_to_left, :flag_url)
     hash[:contexts] = {}
     contexts.each do |name, value|
       hash[:contexts][name] = value.to_cache_hash

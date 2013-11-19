@@ -22,37 +22,43 @@
 #++
 
 class Tr8n::Decorators::Html < Tr8n::Decorators::Base
-  attributes :language, :translation_key, :label, :options
 
-  def decorate
+  def decorate(translation_key, language, label, options = {})
     return label if options[:skip_decorations]
-    return label if translation_key.language == language
+    #return label if translation_key.language == language
     return label unless Tr8n.config.current_translator and Tr8n.config.current_translator.inline?
     return label if translation_key.locked? and not Tr8n.config.current_translator.manager?
 
+    element = 'span'
+    if options[:use_div]
+      element = 'div'
+    end
+
     if translation_key.id.nil?
-      html = "<span style='border-bottom: 2px dotted #ff0000;'>"
-      html << label
-      html << "</span>"
-      return html.html_safe
-    end      
+      return "<#{element} class='tr8n_pending'>#{label}</#{element}>".html_safe
+    end
 
     classes = ['tr8n_translatable']
     
     if translation_key.locked?
-      classes << 'tr8n_locked'
+      if Tr8n.config.current_translator.feature_enabled?(:show_locked_keys)
+        classes << 'tr8n_locked'
+      else
+        return label
+      end
     elsif language.default?
       classes << 'tr8n_not_translated'
     elsif options[:fallback] 
       classes << 'tr8n_fallback'
+    elsif options[:translated]
+      classes << 'tr8n_translated'
     else
-      classes << (options[:translated] ? 'tr8n_translated' : 'tr8n_not_translated')
+      classes << 'tr8n_not_translated'
     end  
 
-    # TODO: switch to <tml:label> notation
-    html = "<span class='#{classes.join(' ')}' translation_key_id='#{translation_key.id}'>"
+    html = "<#{element} class='#{classes.join(' ')}' data-translation_key_id='#{translation_key.id}'>"
     html << label
-    html << "</span>"
+    html << "</#{element}>"
     html.html_safe
   end  
 

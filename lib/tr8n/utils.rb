@@ -63,16 +63,18 @@ module Tr8n
       sentences
     end
 
-    def self.root
-      @root ||= File.expand_path("#{__dir__}/../../")
+    def self.load_json(file_path, env = nil)
+      json = JSON.parse(File.read(file_path))
+      return json if env.nil?
+      return yml['defaults'] if env == 'defaults'
+      yml['defaults'].rmerge(yml[env] || {})
     end
 
-    def self.load_json(file_path)
-      JSON.parse(File.read("#{root}#{file_path}"))
-    end
-
-    def self.load_yaml(file_path)
-      YAML.load_file("#{root}#{file_path}")
+    def self.load_yaml(file_path, env = nil)
+      yaml = YAML.load_file(file_path)
+      return yaml if env.nil?
+      return yaml['defaults'] if env == 'defaults'
+      yaml['defaults'].rmerge(yaml[env] || {})
     end
 
     def self.sign_and_encode_params(params, secret)
