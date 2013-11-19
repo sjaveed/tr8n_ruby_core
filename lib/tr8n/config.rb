@@ -140,7 +140,8 @@ module Tr8n
     end
 
     def default_level
-      0
+      return application.default_level if application
+      hash_value(defaults, "tr8n.default_level")
     end
 
     def default_data_tokens

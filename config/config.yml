@@ -1,6 +1,7 @@
 tr8n:
   enabled:        true
   default_locale: en-US
+  default_level:  0
   application:
     host:         http://localhost:3000
     key:          b420142a2c4201b36

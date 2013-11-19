@@ -26,7 +26,7 @@ require 'faraday'
 API_PATH = '/tr8n/api/'
 
 class Tr8n::Application < Tr8n::Base
-  attributes :host, :key, :secret, :name, :description, :threshold, :translator_level, :version, :updated_at, :default_locale
+  attributes :host, :key, :secret, :name, :description, :threshold, :version, :updated_at, :default_locale, :default_level
   has_many :features, :languages, :sources, :components, :tokens
 
   def self.init(host, key, secret, options = {})
@@ -238,7 +238,7 @@ class Tr8n::Application < Tr8n::Base
   def to_cache_hash(*attrs)
     return super(attrs) if attrs.any?
 
-    hash = super(:host, :name, :description)
+    hash = super(:host, :name, :description, :threshold, :default_locale, :default_level)
     hash["languages"] = []
     languages.each do |lang|
       hash["languages"] << lang.to_cache_hash(:locale, :name, :english_name, :native_name, :right_to_left, :flag_url)
