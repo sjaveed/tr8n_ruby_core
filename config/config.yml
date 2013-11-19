@@ -4,10 +4,10 @@ tr8n:
   default_level:  0
   application:
     host:         http://localhost:3000
-    key:          b420142a2c4201b36
-    secret:       e43888bf9142e1f9d
+    key:          default
+    secret:       12345
   logger:
-    enabled:      false
+    enabled:      true
     path:         /log/tr8n.log
   cache:
     enabled:      false

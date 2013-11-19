@@ -122,7 +122,8 @@ class Tr8n::Language < Tr8n::Base
 
     translate_from_service(temp_key, tokens, options)
   rescue Exception => ex
-    Tr8n.logger.error("Failed to translate: #{label}")
+    Tr8n.logger.error("Failed to translate: #{label} : #{ex.message}")
+    Tr8n.logger.error(ex.backtrace)
     label
   end
 

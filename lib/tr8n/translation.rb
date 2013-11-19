@@ -29,7 +29,7 @@ class Tr8n::Translation < Tr8n::Base
     super
 
     if locale
-      self.language = self.translation_key.application.language[locale]
+      self.language = self.translation_key.application.language(locale)
     end
 
     calculate_precedence

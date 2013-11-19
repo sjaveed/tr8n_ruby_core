@@ -2,28 +2,17 @@ PATH
   remote: .
   specs:
     tr8n_core (1.0.0)
-      activesupport
       dalli
       faraday
 
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (4.0.1)
-      i18n (~> 0.6, >= 0.6.4)
-      minitest (~> 4.2)
-      multi_json (~> 1.3)
-      thread_safe (~> 0.1)
-      tzinfo (~> 0.3.37)
-    atomic (1.1.14)
     dalli (2.6.4)
     diff-lcs (1.2.5)
     faraday (0.8.8)
       multipart-post (~> 1.2.0)
-    i18n (0.6.5)
     json (1.8.1)
-    minitest (4.7.5)
-    multi_json (1.8.2)
     multipart-post (1.2.0)
     rake (10.1.0)
     rdoc (4.0.1)
@@ -36,9 +25,6 @@ GEM
     rspec-expectations (2.14.4)
       diff-lcs (>= 1.1.3, < 2.0)
     rspec-mocks (2.14.4)
-    thread_safe (0.1.3)
-      atomic
-    tzinfo (0.3.38)
 
 PLATFORMS
   ruby

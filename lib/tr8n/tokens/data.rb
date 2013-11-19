@@ -98,7 +98,7 @@ class Tr8n::Tokens::Data < Tr8n::Base
       end
     end
 
-    unless Tr8n.config.application.feature_enabled?(:language_cases)
+    if Tr8n.config.application and not Tr8n.config.application.feature_enabled?(:language_cases)
       return value
     end
 
@@ -135,7 +135,7 @@ class Tr8n::Tokens::Data < Tr8n::Base
   #
   ##############################################################################
   def apply_case(key, value, object, options, language)
-    lcase = language.case_for(key)
+    lcase = language.language_case_by_keyword(key)
     return value unless lcase
     lcase.apply(value, object, options)
   end
@@ -360,7 +360,7 @@ class Tr8n::Tokens::Data < Tr8n::Base
     object = hash_value(context, key, :whole => true)
 
     # see if the token is a default html token
-    object = Tr8n.config.application.default_data_token(key) if object.nil?
+    object = Tr8n.config.default_token_value(key) if object.nil?
 
     #if object.nil?
     #  raise Tr8n::Exception.new("Missing value for a token: #{full_name}")

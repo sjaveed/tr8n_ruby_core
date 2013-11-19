@@ -44,7 +44,7 @@ module Tr8n
     end
 
     def defaults
-      @defaults ||= Tr8n::Utils.load_yaml("#{@root}/config/config.yml")
+      @defaults ||= Tr8n::Utils.load_yaml("/config/config.yml")
     end
 
     def enabled?
@@ -60,7 +60,7 @@ module Tr8n
     end
 
     def log_path
-      "#{root}#{hash_value(defaults, "tr8n.logger.path")}"
+      ".#{hash_value(defaults, "tr8n.logger.path")}"
     end
 
     def cache_enabled?
@@ -80,7 +80,7 @@ module Tr8n
     end
 
     def init_application(host, app_key, app_secret)
-      self.application = Tr8n::Application.init(host, app_key, app_secret)
+      Tr8n::Application.init(host, app_key, app_secret)
     end
 
     def with_block_options(opts)

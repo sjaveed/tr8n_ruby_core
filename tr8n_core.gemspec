@@ -13,10 +13,10 @@ Gem::Specification.new do |s|
   s.summary     = "Tr8n Core Classes"
   s.description = "Tr8n core classes that can be used by any Ruby framework"
 
-  s.files = Dir["{lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.rdoc"]
+  s.files = Dir["{lib}/**/*", "{config}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.rdoc"]
   s.test_files = Dir["spec/**/*"]
+  s.licenses = "MIT-LICENSE"
 
-  s.add_dependency 'activesupport'
   s.add_dependency 'faraday'
   s.add_dependency 'dalli'
 end

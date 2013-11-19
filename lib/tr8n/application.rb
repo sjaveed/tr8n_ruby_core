@@ -31,7 +31,7 @@ class Tr8n::Application < Tr8n::Base
 
   def self.init(host, key, secret, options = {})
     options[:definition] = true if options[:definition].nil?
-    api("application", {:client_id => key, :definition => options[:definition]}, {:host => host, :client_secret => secret, :class => Tr8n::Application, :attributes => {
+    Tr8n.config.application = api("application", {:client_id => key, :definition => options[:definition]}, {:host => host, :client_secret => secret, :class => Tr8n::Application, :attributes => {
       :host => host, 
       :key => key,
       :secret => secret
