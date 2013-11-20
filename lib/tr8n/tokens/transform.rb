@@ -113,7 +113,7 @@ class Tr8n::Tokens::Transform < Tr8n::Tokens::Data
   # token:      {actors:|| likes, like}
   # transform:  ["unsupported", {"one": "{$0}", "other": "{$1}"}]
   # results in: {"one": "likes", "other": "like"}
-  def generate_value_map(params, context)
+  def generate_value_map(object, params, context)
     values = {}
 
     if params.first.index(':')
@@ -160,13 +160,13 @@ class Tr8n::Tokens::Transform < Tr8n::Tokens::Data
 
         # apply settings cases
         value = params[index]
-        if Tr8n::RequestContext.container_application.feature_enabled?(:language_cases)
+        if Tr8n.config.application.feature_enabled?(:language_cases)
           parts[1..-1].each do |case_key|
-            lcase = Tr8n::LanguageCase.by_keyword_and_language(case_key, context.language)
+            lcase = context.language.language_case_by_keyword(case_key)
             unless lcase
               raise Tr8n::Exception.new("Language case #{case_key} for context #{context.keyword} is not defined: #{full_name}")
             end
-            value = lcase.apply(value)
+            value = lcase.apply(value, object)
           end
         end
         values[key] = values[key].gsub(token, value)
@@ -177,7 +177,7 @@ class Tr8n::Tokens::Transform < Tr8n::Tokens::Data
   end
 
   def substitute(label, context, language, options = {})
-    object = self.class.token_object(context, key)
+    object = Tr8n::Tokens::Data.token_object(context, key)
 
     unless object
       raise Tr8n::Exception.new("Missing value for a token: #{full_name}")
@@ -189,7 +189,7 @@ class Tr8n::Tokens::Transform < Tr8n::Tokens::Data
 
     language_context = context_for_language(language)
 
-    piped_values = generate_value_map(piped_params, language_context)
+    piped_values = generate_value_map(object, piped_params, language_context)
 
     rule = language_context.find_matching_rule(object)
     return label unless rule
@@ -203,7 +203,7 @@ class Tr8n::Tokens::Transform < Tr8n::Tokens::Data
 
     substitution_value = []
     if displayed_in_translation?
-      substitution_value << token_value(context, options, language)
+      substitution_value << token_value(hash_value(context, key), options, language)
       substitution_value << " "
     end
     substitution_value << value

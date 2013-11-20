@@ -193,6 +193,7 @@ class Tr8n::Application < Tr8n::Base
     return if @missing_keys_by_sources.nil? or @missing_keys_by_sources.empty?
     params = []
     @missing_keys_by_sources.each do |source, keys|
+      next unless keys.values.any?
       params << {:source => source, :keys => keys.values.collect{|tkey| tkey.to_hash(:label, :description, :locale, :level)}}
     end
     post('source/register_keys', {:source_keys => params.to_json}, :method => :post)

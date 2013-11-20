@@ -104,19 +104,21 @@ class Tr8n::Language < Tr8n::Base
     return label if label.tr8n_translated?
 
     params = Tr8n::Utils.normalize_tr_params(label, description, tokens, options)
-    locale = params[:options][:locale] || Tr8n.config.block_options[:locale] || Tr8n.config.default_locale
-    level = params[:options][:level] || Tr8n.config.block_options[:level] || Tr8n.config.default_level
+    key_locale = hash_value(params[:options], :locale) || hash_value(Tr8n.config.block_options, :locale) || Tr8n.config.default_locale
+    key_level = hash_value(params[:options], :level) || hash_value(Tr8n.config.block_options, :level) || Tr8n.config.default_level
 
     temp_key = Tr8n::TranslationKey.new({
         :application  => application,
         :label        => params[:label],
         :description  => params[:description],
-        :locale       => locale,
-        :level        => level,
+        :locale       => key_locale,
+        :level        => key_level,
         :translations => []
     })
 
-    unless Tr8n.config.enabled?
+    #Tr8n.logger.info("Translating " + params[:label] + " from: " + key_locale.inspect + " to " + locale.inspect)
+
+    if Tr8n.config.disabled? or locale == key_locale
       return temp_key.substitute_tokens(params[:label], params[:tokens], self, params[:options]).tr8n_translated
     end
 

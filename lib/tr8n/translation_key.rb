@@ -103,7 +103,7 @@ class Tr8n::TranslationKey < Tr8n::Base
   def find_first_valid_translation(language, token_values)
     translations = translations_for_language(language)
 
-    translations.sort! { |x,y| y.precedence <=> x.precedence }
+    translations.sort! { |x,y| x.precedence <=> y.precedence }
 
     translations.each do |translation|
       return translation if translation.matches_rules?(token_values)
@@ -113,7 +113,7 @@ class Tr8n::TranslationKey < Tr8n::Base
   end
 
   def translate(language, token_values = {}, options = {})
-    if Tr8n.config.disabled? or language.locale == self.attributes[:language].locale
+    if Tr8n.config.disabled? or language.locale == self.attributes[:locale]
       return substitute_tokens(label, token_values, language, options.merge(:fallback => false))
     end
 

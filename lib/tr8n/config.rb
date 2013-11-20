@@ -157,7 +157,10 @@ module Tr8n
           },
           "genders" => {
               "variables" => {
-                  "@genders" => lambda{|list| list.collect{|u| u.gender}},
+                  "@genders" => lambda{|list| list.collect do |u|
+                      u.is_a?(Hash) ? (u["gender"] || u[:gender]) : u.gender
+                    end
+                  },
                   "@size" => lambda{|list| list.size}
               }
           },

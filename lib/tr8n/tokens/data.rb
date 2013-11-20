@@ -191,15 +191,42 @@ class Tr8n::Tokens::Data < Tr8n::Base
       return sanitize(object, method.call(*params_with_object), options, language)
     end
 
+    if method.is_a?(Hash)
+      value = hash_value(method, :value)
+      attr  = hash_value(method, :attribute)
+
+      unless attr.nil?
+        if object.is_a?(Hash)
+          value = hash_value(object, attr)
+        else
+          value = object.send(attr)
+        end
+      end
+
+      if value.nil?
+        return raise Tr8n::Exception.new("Hash object is missing a value or attribute key for a token: #{full_name}")
+      end
+
+      return sanitize(object,value, options, language)
+    end
+
     raise Tr8n::Exception.new("Invalid array second token value: #{full_name} in #{label}")
   end
 
   def self.token_object(token_values, token_name)
     return nil if token_values.nil?
-    token_object = token_values[token_name] || token_values[token_name.to_sym]
-    return token_object.first if token_object.is_a?(Array)
-    return token_object[:object] || token_object['object'] if token_object.is_a?(Hash)
-    token_object
+    object = token_values[token_name.to_s] || token_values[token_name.to_sym]
+
+    # for arrays
+    return object.first if object.is_a?(Array)
+
+    # hash maybe nested {:object => {}, :attribute => ""}
+    if object.is_a?(Hash)
+      sub_object = object[:object] || object['object']
+      return sub_object if sub_object
+    end
+
+    object
   end
 
   ##############################################################################
@@ -320,17 +347,17 @@ class Tr8n::Tokens::Data < Tr8n::Base
     elsif object.is_a?(Hash)
       # if object is a hash, it must be of a form: {:object => {}, :value => "", :attribute => ""}
       # either value can be passed, or the attribute. attribute will be used first
-      if object[:object].nil?
+      if hash_value(object, :object).nil?
         return raise Tr8n::Exception.new("Hash token is missing an object key for a token: #{full_name}")
       end
 
-      value = object[:value]      || object["value"]
-      obj   = object[:object]     || object["object"]
-      attr  = object[:attribute]  || object["attribute"]
+      obj   = hash_value(object, :object)
+      value = hash_value(object, :value)
+      attr  = hash_value(object, :attribute)
 
       unless attr.nil?
         if obj.is_a?(Hash)
-          value = obj[attr.to_s] || obj[attr.to_sym]
+          value = hash_value(obj, attr)
         else
           value = obj.send(attr)
         end

@@ -23,7 +23,7 @@
 
 class Tr8n::LanguageCase < Tr8n::Base
   belongs_to  :language
-  attributes  :keyword, :latin_name, :native_name, :description, :application
+  attributes  :id, :keyword, :latin_name, :native_name, :description, :application
   has_many    :rules
 
   TR8N_HTML_TAGS_REGEX = /<\/?[^>]*>/
