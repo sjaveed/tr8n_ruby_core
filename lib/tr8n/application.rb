@@ -246,7 +246,7 @@ class Tr8n::Application < Tr8n::Base
   end
 
   def to_cache_hash
-    hash = to_hash(:host, :name, :description, :threshold, :default_locale, :default_level)
+    hash = to_hash(:host, :key, :secret, :name, :description, :threshold, :default_locale, :default_level)
     hash["languages"] = []
     languages.each do |lang|
       hash["languages"] << lang.to_hash(:locale, :name, :english_name, :native_name, :right_to_left, :flag_url)
