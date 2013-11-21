@@ -129,11 +129,12 @@ class Tr8n::Language < Tr8n::Base
       return translation_key.translate(self, params[:tokens], params[:options])
     end
 
-    if Tr8n.config.cache_enabled? and Tr8n.config.current_translator? and Tr8n.config.current_translator.inline?
-      return translate_from_cache(temp_key, params[:tokens], params[:options]).tr8n_translated
+    # no cache or translator is using inline mode - use service, otherwise load from cache
+    if not Tr8n.config.cache_enabled? or (Tr8n.config.current_translator and Tr8n.config.current_translator.inline?)
+      return translate_from_service(temp_key, params[:tokens], params[:options]).tr8n_translated  
     end
 
-    translate_from_service(temp_key, params[:tokens], params[:options]).tr8n_translated
+    translate_from_cache(temp_key, params[:tokens], params[:options]).tr8n_translated
   rescue Exception => ex
     Tr8n.logger.error("Failed to translate: #{params[:label]} : #{ex.message}")
     Tr8n.logger.error(ex.backtrace)
