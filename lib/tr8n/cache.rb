@@ -25,7 +25,7 @@ module Tr8n
 
   def self.cache
     @cache ||= begin
-      klass = Object.const_get("Tr8n::CacheAdapters::#{Tr8n.config.cache_adapter.camelcase}")
+      klass = Tr8n::CacheAdapters.const_get(Tr8n.config.cache_adapter.camelcase)
       klass.new
     end
   end

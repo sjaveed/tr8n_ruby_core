@@ -48,6 +48,7 @@ end
  "tr8n/rules_engine",
  "tr8n/tokens",
  "tr8n/decorators",
+ "tr8n/cache_adapters",
  "tr8n/cache",
  "tr8n/cache/generators",
  "tr8n_core/ext",
