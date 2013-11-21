@@ -140,6 +140,10 @@ module Tr8n
       hash_value(defaults, "cache.host")
     end
 
+    def cache_timeout
+      hash_value(defaults, 'cache.timeout')
+    end
+
     #########################################################
     ## Rules Engine
     #########################################################

@@ -47,18 +47,20 @@ class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
 
     data = yield
 
-    @cache.set(versioned_key(key), serialize_object(data))
+    store(key, data)
 
     data
   end
 
   def store(key, data, opts = {})
     info("Cache store: #{key}")
-    @cache.set(versioned_key(key), serialize_object(data))
+    ttl = Tr8n.config.cache_timeout || nil
+    @cache.set(versioned_key(key), serialize_object(key, data), nil)
   end
 
   def delete(key, opts = {})
     info("Cache delete: #{key}")
+    @cache.delete(versioned_key(key))
   end
 
   def exist?(key, opts = {})
@@ -69,5 +71,4 @@ class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
   def clear(opts = {})
     info("Cache clear")
   end
-
 end
