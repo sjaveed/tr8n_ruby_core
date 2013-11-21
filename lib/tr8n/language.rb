@@ -139,6 +139,7 @@ class Tr8n::Language < Tr8n::Base
     Tr8n.logger.error(ex.backtrace)
     params[:label]
   end
+  alias :tr :translate
 
   def translate_from_cache(translation_key, tokens, options)
     # In most scenarios translations should be cached by source
