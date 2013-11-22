@@ -4,6 +4,7 @@ PATH
     tr8n_core (1.0.0)
       dalli
       faraday
+      redis
 
 GEM
   remote: https://rubygems.org/
@@ -17,6 +18,7 @@ GEM
     rake (10.1.0)
     rdoc (4.0.1)
       json (~> 1.4)
+    redis (3.0.6)
     rspec (2.14.1)
       rspec-core (~> 2.14.0)
       rspec-expectations (~> 2.14.0)
