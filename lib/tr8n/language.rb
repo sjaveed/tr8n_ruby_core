@@ -155,7 +155,7 @@ class Tr8n::Language < Tr8n::Base
         translation_keys = {}
       else
         source = application.source(source_key)
-        translation_keys = surce.fetch_translations_for_language(self, options)
+        translation_keys = source.fetch_translations_for_language(self, options)
         Tr8n.cache.store(cache_key, source)
       end
 
