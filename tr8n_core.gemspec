@@ -19,4 +19,5 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'faraday'
   s.add_dependency 'dalli'
+  s.add_dependency 'redis'
 end

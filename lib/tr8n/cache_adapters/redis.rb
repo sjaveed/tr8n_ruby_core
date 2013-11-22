@@ -21,7 +21,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-#require 'redis'
+require 'redis'
 
 class Tr8n::CacheAdapters::Redis < Tr8n::Cache
 
