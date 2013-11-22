@@ -21,8 +21,61 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+#require 'redis'
 
 class Tr8n::CacheAdapters::Redis < Tr8n::Cache
 
+  def initialize
+    cache_host, cache_port = Tr8n.config.cache_host.split(':') if Tr8n.config.cache_host
+    cache_host ||= 'localhost'
+    cache_port ||= 6379
+
+    @cache = ::Redis.new(host: cache_host, port: cache_port)
+  end
+
+  def read_only?
+    false
+  end
+
+  def fetch(key, opts = {})
+    data = @cache.get(versioned_key(key))
+    if data
+      info("Cache hit: #{key}")
+      return deserialize_object(key, data)
+    end
+
+    info("Cache miss: #{key}")
+
+    return nil unless block_given?
+
+    data = yield
+
+    store(key, data)
+
+    data
+  end
+
+  def store(key, data, opts = {})
+    info("Cache store: #{key}")
+    ttl = Tr8n.config.cache_timeout || nil
+    versioned_key = versioned_key(key)
+
+    @cache.set(versioned_key, serialize_object(key, data))
+    @cache.expire(versioned_key, ttl) if ttl
+  end
+
+  def delete(key, opts = {})
+    info("Cache delete: #{key}")
+    @cache.del(versioned_key(key))
+  end
+
+  def exist?(key, opts = {})
+    data = @cache.exist(versioned_key(key))
+    not data.nil?
+  end
+
+  def clear(opts = {})
+    info("Cache clear has no effect")
+  end
 
 end
