@@ -38,13 +38,15 @@ class Tr8n::CacheAdapters::File < Tr8n::Cache
   def fetch(key, opts = {})
     path = self.class.file_path(key)
 
-    if File.exists(path)
+    if File.exists?(path)
       info("Cache hit: #{key}")
       data = File.read(path)
       return deserialize_object(key, data)
     end
 
     info("Cache miss: #{key}")
+
+    return nil unless block_given?
 
     yield
   end

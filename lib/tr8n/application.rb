@@ -32,6 +32,8 @@ class Tr8n::Application < Tr8n::Base
   def self.init(host, key, secret, options = {})
     options[:definition] = true if options[:definition].nil?
 
+    Tr8n.cache.reset_version
+
     Tr8n.logger.info("Initializing application...")
 
     Tr8n.config.application = Tr8n.cache.fetch(cache_key(key)) do
@@ -208,15 +210,6 @@ class Tr8n::Application < Tr8n::Base
     @missing_keys_by_sources = nil
   end
 
-  def update_cache_version
-    return unless updated_at.nil? 
-    return if updated_at and updated_at > (Time.now - 1.hour)
-    
-    # version = get("application/version")
-    # Tr8n.cache.set_version(version)
-    # updated_at = Time.now
-  end
-
   def featured_languages
     @featured_languages ||= begin
       locales = Tr8n.cache.fetch("featured_locales") do
@@ -271,6 +264,8 @@ class Tr8n::Application < Tr8n::Base
   #######################################################################################################
   ##  API Methods
   #######################################################################################################
+  ## TODO: maybe caching can be done generically on the API level during gets?
+  ## TODO: think about it...
 
   def get(path, params = {}, opts = {})
     api(path, params, opts)

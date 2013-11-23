@@ -21,7 +21,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'redis'
+require 'redis' if defined?(::Redis)
 
 class Tr8n::CacheAdapters::Redis < Tr8n::Cache
 
@@ -38,7 +38,7 @@ class Tr8n::CacheAdapters::Redis < Tr8n::Cache
   end
 
   def fetch(key, opts = {})
-    data = @cache.get(versioned_key(key))
+    data = @cache.get(versioned_key(key, opts))
     if data
       info("Cache hit: #{key}")
       return deserialize_object(key, data)
@@ -61,11 +61,11 @@ class Tr8n::CacheAdapters::Redis < Tr8n::Cache
 
   def store(key, data, opts = {})
     info("Cache store: #{key}")
-    ttl = Tr8n.config.cache_timeout || nil
-    versioned_key = versioned_key(key)
+    ttl = opts[:ttl] || Tr8n.config.cache_timeout
+    versioned_key = versioned_key(key, opts)
 
     @cache.set(versioned_key, serialize_object(key, data))
-    @cache.expire(versioned_key, ttl) if ttl
+    @cache.expire(versioned_key, ttl) if ttl and ttl > 0
   rescue Exception => ex
     warn("Failed to store data: #{ex.message}")
     data
@@ -73,14 +73,14 @@ class Tr8n::CacheAdapters::Redis < Tr8n::Cache
 
   def delete(key, opts = {})
     info("Cache delete: #{key}")
-    @cache.del(versioned_key(key))
+    @cache.del(versioned_key(key, opts))
   rescue Exception => ex
     warn("Failed to delete data: #{ex.message}")
     key
   end
 
   def exist?(key, opts = {})
-    data = @cache.exist(versioned_key(key))
+    data = @cache.exist(versioned_key(key, opts))
     not data.nil?
   rescue Exception => ex
     warn("Failed to check if key exists: #{ex.message}")

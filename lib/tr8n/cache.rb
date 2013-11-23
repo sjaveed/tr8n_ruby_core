@@ -37,6 +37,22 @@ module Tr8n
 
   class Cache
 
+    def version
+      @version ||= begin
+        v = fetch('tr8n_cache_version', :skip_version => true)
+        v ? v['version'] : Tr8n.config.cache_version
+      end
+    end
+
+    def upgrade_version
+      store('tr8n_cache_version', {'version' => version + 1}, :ttl => 0, :skip_version => true)
+      @version = nil
+    end
+
+    def reset_version
+      @version = nil
+    end
+
     def enabled?
       Tr8n.config.cache_enabled?
     end
@@ -61,8 +77,9 @@ module Tr8n
       Tr8n.logger.warn("#{cache_name} - #{msg}")
     end
 
-    def versioned_key(key)
-      "tr8n_rc_v#{Tr8n.config.cache_version}_#{key}"
+    def versioned_key(key, opts = {})
+      return key if opts[:skip_version]
+      "tr8n_rc_v#{version}_#{key}"
     end
 
     def fetch(key, opts = {})

@@ -21,7 +21,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'dalli'
+require 'dalli' if defined?(Dalli)
 
 class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
 
@@ -35,7 +35,7 @@ class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
   end
 
   def fetch(key, opts = {})
-    data = @cache.get(versioned_key(key))
+    data = @cache.get(versioned_key(key, opts))
     if data
       info("Cache hit: #{key}")
       return deserialize_object(key, data)
@@ -58,8 +58,8 @@ class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
 
   def store(key, data, opts = {})
     info("Cache store: #{key}")
-    ttl = Tr8n.config.cache_timeout || nil
-    @cache.set(versioned_key(key), serialize_object(key, data), nil)
+    ttl = opts[:ttl] || Tr8n.config.cache_timeout
+    @cache.set(versioned_key(key, opts), serialize_object(key, data), ttl)
     data
   rescue Exception => ex
     warn("Failed to store data: #{ex.message}")
@@ -68,7 +68,7 @@ class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
 
   def delete(key, opts = {})
     info("Cache delete: #{key}")
-    @cache.delete(versioned_key(key))
+    @cache.delete(versioned_key(key, opts))
     key
   rescue Exception => ex
     warn("Failed to delete data: #{ex.message}")
@@ -76,7 +76,7 @@ class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
   end
 
   def exist?(key, opts = {})
-    data = @cache.get(versioned_key(key))
+    data = @cache.get(versioned_key(key, opts))
     not data.nil?
   rescue Exception => ex
     warn("Failed to check if key exists: #{ex.message}")

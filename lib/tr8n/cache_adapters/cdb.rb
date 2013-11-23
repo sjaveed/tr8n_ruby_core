@@ -21,49 +21,54 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require 'libcdb' if defined?(LibCDB)
 
 class Tr8n::CacheAdapters::Cdb < Tr8n::Cache
 
-  #def self.cache_path
-  #  "#{Tr8n.config.cache_path}/files/current"
-  #end
-  #
-  #def self.file_name(key)
-  #  "#{key.gsub(/[\.\/]/, '-')}.json"
-  #end
-  #
-  #def self.file_path(key)
-  #  "#{cache_path}/#{file_name(key)}"
-  #end
-  #
-  #def fetch(key, opts = {})
-  #  path = self.class.file_path(key)
-  #
-  #  if File.exists(path)
-  #    info("Cache hit: #{key}")
-  #    data = File.read(path)
-  #    return deserialize_object(key, data)
-  #  end
-  #
-  #  info("Cache miss: #{key}")
-  #
-  #  yield
-  #end
-  #
-  #def store(key, data, opts = {})
-  #  warn("This is a readonly cache")
-  #end
-  #
-  #def delete(key, opts = {})
-  #  warn("This is a readonly cache")
-  #end
-  #
-  #def exist?(key, opts = {})
-  #  File.exists(file_path(key))
-  #end
-  #
-  #def clear(opts = {})
-  #  warn("This is a readonly cache")
-  #end
+  def initialize
+    @cache = LibCDB::CDB.open(cache_path)
+  end
+
+  def self.cache_path
+    "#{Tr8n.config.cache_path}/cdb/current.cdb"
+  end
+
+  def cached_by_source?
+    false
+  end
+
+  def fetch(key, opts = {})
+    data = @cache[key]
+    if data
+      info("Cache hit: #{key}")
+      return deserialize_object(key, data)
+    end
+
+    info("Cache miss: #{key}")
+
+    return nil unless block_given?
+
+    yield
+  rescue Exception => ex
+    warn("Failed to retrieve data: #{ex.message}")
+    return nil unless block_given?
+    yield
+  end
+
+  def store(key, data, opts = {})
+    warn("This is a readonly cache")
+  end
+
+  def delete(key, opts = {})
+    warn("This is a readonly cache")
+  end
+
+  def exist?(key, opts = {})
+    @cache[key]
+  end
+
+  def clear(opts = {})
+    warn("This is a readonly cache")
+  end
 
 end

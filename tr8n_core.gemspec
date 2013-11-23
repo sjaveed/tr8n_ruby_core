@@ -18,6 +18,6 @@ Gem::Specification.new do |s|
   s.licenses = "MIT-LICENSE"
 
   s.add_dependency 'faraday'
-  s.add_dependency 'dalli'
-  s.add_dependency 'redis'
+  #s.add_dependency 'dalli'
+  #s.add_dependency 'redis'
 end

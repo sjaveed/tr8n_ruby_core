@@ -33,12 +33,12 @@ class Tr8nCore::Generators::Cache::File < Tr8nCore::Generators::Cache::Base
   end
 
   def cache(key, data)
-    file_path = "#{cache_path}/#{Tr8n::Cache::File.file_name(key)}"
+    file_path = "#{cache_path}/#{Tr8n::CacheAdapters::File.file_name(key)}"
     File.open(file_path, 'w') { |file| file.write(JSON.pretty_generate(data)) }
   end
 
   def symlink_path
-    Tr8n::Cache::File.cache_path
+    Tr8n::CacheAdapters::File.cache_path
   end
 
   def execute

@@ -156,7 +156,6 @@ class Tr8n::Language < Tr8n::Base
         translation_keys = {}
       else
         # get the source info from the application
-        #Tr8n.logger.info("GETTING SOURCE")
         source = application.source(source_key)
         translation_keys = source.fetch_translations_for_language(self, options)
         Tr8n.cache.store(cache_key, source)
