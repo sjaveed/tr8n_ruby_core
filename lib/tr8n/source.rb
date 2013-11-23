@@ -60,13 +60,13 @@ class Tr8n::Source < Tr8n::Base
                                              {:source => source, :locale => language.locale},
                                              {:class => Tr8n::TranslationKey, :attributes => {:application => application}})
 
-    self.translation_keys = {}
+    self.attributes[:translation_keys] = {}
 
     keys_with_translations.each do |tkey|
-      self.translation_keys[tkey.key] = application.cache_translation_key(tkey)
+      self.attributes[:translation_keys][tkey.key] = application.cache_translation_key(tkey)
     end
 
-    translation_keys
+    self.attributes[:translation_keys]
   end
 
   #######################################################################################################
@@ -84,9 +84,9 @@ class Tr8n::Source < Tr8n::Base
   def to_cache_hash
     hash = to_hash(:source, :url, :name, :description)
     if translation_keys and translation_keys.any?
-      hash[:translation_keys] = {}
+      hash[:translation_keys] = []
       translation_keys.values.each do |tkey|
-        hash[:translation_keys] = tkey.to_cache_hash
+        hash[:translation_keys] << tkey.to_cache_hash
       end
     end
     hash

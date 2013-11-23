@@ -53,6 +53,10 @@ class Tr8n::CacheAdapters::Redis < Tr8n::Cache
     store(key, data)
 
     data
+  rescue Exception => ex
+    warn("Failed to retrieve data: #{ex.message}")
+    return nil unless block_given?
+    yield
   end
 
   def store(key, data, opts = {})
@@ -62,16 +66,25 @@ class Tr8n::CacheAdapters::Redis < Tr8n::Cache
 
     @cache.set(versioned_key, serialize_object(key, data))
     @cache.expire(versioned_key, ttl) if ttl
+  rescue Exception => ex
+    warn("Failed to store data: #{ex.message}")
+    data
   end
 
   def delete(key, opts = {})
     info("Cache delete: #{key}")
     @cache.del(versioned_key(key))
+  rescue Exception => ex
+    warn("Failed to delete data: #{ex.message}")
+    key
   end
 
   def exist?(key, opts = {})
     data = @cache.exist(versioned_key(key))
     not data.nil?
+  rescue Exception => ex
+    warn("Failed to check if key exists: #{ex.message}")
+    false
   end
 
   def clear(opts = {})

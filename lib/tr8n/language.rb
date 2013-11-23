@@ -149,11 +149,14 @@ class Tr8n::Language < Tr8n::Base
       cache_key = Tr8n::Source.cache_key(source_key, locale);
       source = Tr8n.cache.fetch(cache_key)
 
+      # if it came from cache, it will be full of translation keys with translations for the locale
       if source
         translation_keys = source.translation_keys
       elsif Tr8n.cache.read_only?
         translation_keys = {}
       else
+        # get the source info from the application
+        #Tr8n.logger.info("GETTING SOURCE")
         source = application.source(source_key)
         translation_keys = source.fetch_translations_for_language(self, options)
         Tr8n.cache.store(cache_key, source)

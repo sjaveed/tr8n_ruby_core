@@ -50,25 +50,42 @@ class Tr8n::CacheAdapters::Memcache < Tr8n::Cache
     store(key, data)
 
     data
+  rescue Exception => ex
+    warn("Failed to retrieve data: #{ex.message}")
+    return nil unless block_given?
+    yield
   end
 
   def store(key, data, opts = {})
     info("Cache store: #{key}")
     ttl = Tr8n.config.cache_timeout || nil
     @cache.set(versioned_key(key), serialize_object(key, data), nil)
+    data
+  rescue Exception => ex
+    warn("Failed to store data: #{ex.message}")
+    data
   end
 
   def delete(key, opts = {})
     info("Cache delete: #{key}")
     @cache.delete(versioned_key(key))
+    key
+  rescue Exception => ex
+    warn("Failed to delete data: #{ex.message}")
+    key
   end
 
   def exist?(key, opts = {})
     data = @cache.get(versioned_key(key))
     not data.nil?
+  rescue Exception => ex
+    warn("Failed to check if key exists: #{ex.message}")
+    false
   end
 
   def clear(opts = {})
     info("Cache clear")
+  rescue Exception => ex
+    warn("Failed to clear cache: #{ex.message}")
   end
 end

@@ -25,8 +25,13 @@ module Tr8n
 
   def self.cache
     @cache ||= begin
-      klass = Tr8n::CacheAdapters.const_get(Tr8n.config.cache_adapter.camelcase)
-      klass.new
+      if Tr8n.config.cache_enabled?
+        klass = Tr8n::CacheAdapters.const_get(Tr8n.config.cache_adapter.camelcase)
+        klass.new
+      else
+        # blank implementation
+        Tr8n::Cache.new
+      end
     end
   end
 
@@ -61,38 +66,45 @@ module Tr8n
     end
 
     def fetch(key, opts = {})
-      raise Tr8n::Exception.new("Must be implemented by the subclass")
+      return nil unless block_given?
+      yield
     end
 
     def store(key, data, opts = {})
-      raise Tr8n::Exception.new("Must be implemented by the subclass")
+      # do nothing
     end
 
     def delete(key, opts = {})
-      raise Tr8n::Exception.new("Must be implemented by the subclass")
+      # do nothing
     end
 
     def exist?(key, opts = {})
-      raise Tr8n::Exception.new("Must be implemented by the subclass")
+      false
     end
 
     def clear(opts = {})
-      raise Tr8n::Exception.new("Must be implemented by the subclass")
+      # do nothing
     end
 
     def serialize_object(key, data)
-      unless [Tr8n::Application.cache_prefix,
+      if [Tr8n::Application.cache_prefix,
               Tr8n::Language.cache_prefix,
               Tr8n::Source.cache_prefix,
               Tr8n::Component.cache_prefix,
               Tr8n::TranslationKey.cache_prefix].include?(key[0..1])
-        return data
+        json_data = data.to_cache_hash.to_json
+      else
+        # the data must be in cacheable form - usually API responses
+        json_data = data.to_json
       end
 
-      data.to_cache_hash.to_json
+      #info(json_data)
+      json_data
     end
 
     def deserialize_object(key, data)
+      #info(data.inspect)
+
       case key[0..1]
         when Tr8n::Application.cache_prefix
           return Tr8n::Application.new(JSON.parse(data))
@@ -106,7 +118,8 @@ module Tr8n
           return Tr8n::TranslationKey.new(JSON.parse(data).merge(:application => Tr8n.config.application))
       end
 
-      data
+      # API response form will be here
+      JSON.parse(data)
     end
 
 

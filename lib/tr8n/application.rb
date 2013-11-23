@@ -34,22 +34,30 @@ class Tr8n::Application < Tr8n::Base
 
     Tr8n.logger.info("Initializing application...")
 
-    if Tr8n.config.cache_enabled?
-      Tr8n.config.application = Tr8n.cache.fetch(cache_key(key))
-      return Tr8n.config.application if Tr8n.config.application
+    Tr8n.config.application = Tr8n.cache.fetch(cache_key(key)) do
+      api("application", {:client_id => key, :definition => options[:definition]}, {:host => host, :client_secret => secret, :class => Tr8n::Application, :attributes => {
+          :host => host,
+          :key => key,
+          :secret => secret
+      }})
     end
 
-    Tr8n.config.application = api("application", {:client_id => key, :definition => options[:definition]}, {:host => host, :client_secret => secret, :class => Tr8n::Application, :attributes => {
-      :host => host, 
-      :key => key,
-      :secret => secret
-    }})
-
-    if Tr8n.config.cache_enabled?
-      Tr8n.cache.store(cache_key(key), Tr8n.config.application)
-    end
-
-    Tr8n.config.application
+    #if Tr8n.config.cache_enabled?
+    #  Tr8n.config.application = Tr8n.cache.fetch(cache_key(key))
+    #  return Tr8n.config.application if Tr8n.config.application
+    #end
+    #
+    #Tr8n.config.application = api("application", {:client_id => key, :definition => options[:definition]}, {:host => host, :client_secret => secret, :class => Tr8n::Application, :attributes => {
+    #  :host => host,
+    #  :key => key,
+    #  :secret => secret
+    #}})
+    #
+    #if Tr8n.config.cache_enabled?
+    #  Tr8n.cache.store(cache_key(key), Tr8n.config.application)
+    #end
+    #
+    #Tr8n.config.application
   end
 
   def initialize(attrs = {})
@@ -210,7 +218,13 @@ class Tr8n::Application < Tr8n::Base
   end
 
   def featured_languages
-    get("application/featured_locales").collect{ |locale| language(locale) }
+    @featured_languages ||= begin
+      locales = Tr8n.cache.fetch("featured_locales") do
+        get("application/featured_locales")
+      end
+      # use app languages, there is no need for rules for this call
+      (locales.nil? or locales.empty?) ? [] : languages.select{|l| locales.inlcude?(l.locale)}
+    end
   end
  
   def translators
