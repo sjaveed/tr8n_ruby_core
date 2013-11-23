@@ -216,7 +216,7 @@ class Tr8n::Application < Tr8n::Base
         get("application/featured_locales")
       end
       # use app languages, there is no need for rules for this call
-      (locales.nil? or locales.empty?) ? [] : languages.select{|l| locales.inlcude?(l.locale)}
+      (locales.nil? or locales.empty?) ? [] : languages.select{|l| locales.include?(l.locale)}
     end
   end
  
