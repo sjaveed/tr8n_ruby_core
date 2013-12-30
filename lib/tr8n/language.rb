@@ -161,7 +161,7 @@ class Tr8n::Language < Tr8n::Base
         Tr8n.cache.store(cache_key, source)
       end
 
-      if translation_keys b && translation_keys[translation_key.key]
+      if translation_keys && translation_keys[translation_key.key]
         translation_key = translation_keys[translation_key.key]
         return translation_key.translate(self, tokens, options)
       end
